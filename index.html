@@ -686,7 +686,6 @@ dictionary HumanFace {
   required long                  id;
   required float                 probability;
   sequence&lt;Point2D&gt;              contour;
-  sequence&lt;Point2D&gt;              mesh;
   sequence&lt;HumanFaceLandmark&gt;    landmarks;
 };</pre>
       <section class="notoc">
@@ -721,22 +720,10 @@ dictionary HumanFace {
             The points are given in image coordinates.</p>
             <p>If the current {{MediaTrackSettings/faceDetectionMode}} setting
             of the {{MediaStreamTrack}} object is not
-            {{FaceDetectionMode/"contour"}} or {{FaceDetectionMode/"mesh"}},
-            then this member will not exist.</p>
+            {{FaceDetectionMode/"contour"}}, then this member will not exist.</p>
             <p>The length of the array is controlled by the current
             {{MediaTrackSettings/faceDetectionNumContourPoints}} setting of
             the {{MediaStreamTrack}} object.</p>
-          </dd>
-          <dt><dfn><code>mesh</code></dfn> of type <span class="idlMemberType">{{sequence}}&lt;{{Point2D}}&gt;</span></dt>
-          <dd>
-            <p>Arbitrary points on the face.
-            When only a single point is returned,
-            it SHOULD be located at the center of the face.
-            The points are given in image coordinates.</p>
-            <p>If the current {{MediaTrackSettings/faceDetectionMode}} setting
-            of the {{MediaStreamTrack}} object is not
-            {{FaceDetectionMode/"mesh"}},
-            then this member will not exist.</p>
           </dd>
           <dt><dfn><code>landmarks</code></dfn> of type <span class="idlMemberType">{{sequence}}&lt;{{HumanFaceLandmark}}&gt;</span></dt>
           <dd>
@@ -974,7 +961,6 @@ enum HumanFaceLandmark {
   "none",
   "presence",
   "contour",
-  "mesh"
 };</pre>
       <section class="notoc">
         <h4>{{FaceDetectionMode}} Enumeration Description</h4>
@@ -991,20 +977,12 @@ enum HumanFaceLandmark {
             or such a mode is requested.</p>
             <p class="note">This mode may be useful with a <code>true</code>
             <a>face landmark detection mode</a> in order to detect human face
-            landmarks but not contours or meshes.</p>
+            landmarks but not contours.</p>
           </dd>
           <dt><dfn><code>contour</code></dfn></dt>
           <dd>
             <p>This source offers human face contour detection,
             or such a mode is requested.</p>
-          </dd>
-          <dt><dfn><code>mesh</code></dfn></dt>
-          <dd>
-            <p>This source offers human face mesh and contour detection,
-            or such a mode is requested.</p>
-            <p class="note">It is possible to disable human face contour
-            detection in this mode by setting the <a>number of face detection
-            contour points</a> to zero.</p>
           </dd>
         </dl>
       </section>
@@ -1014,7 +992,7 @@ enum HumanFaceLandmark {
       <ol>
         <li>
           <p><dfn>Face detection mode</dfn> describes which face details
-          (presence, contour points, mesh points) are to be detected.</p>
+          (presence or contour points) are to be detected.</p>
         </li>
         <li>
           <p><dfn>Face landmark detection mode</dfn> describes whether human
