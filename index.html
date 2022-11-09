@@ -683,8 +683,8 @@ partial dictionary VideoFrameMetadata {
       <h3>{{HumanFace}}</h3>
       <pre class="idl">
 dictionary HumanFace {
-  required long                  id;
-  required float                 probability;
+  long                           id;
+  float?                         probability;
   sequence&lt;Point2D&gt;              contour;
   sequence&lt;HumanFaceLandmark&gt;    landmarks;
 };</pre>
@@ -701,13 +701,12 @@ dictionary HumanFace {
             Typically this means that the face detection engine does not
             support face tracking.</p>
           </dd>
-          <dt><dfn><code>probability</code></dfn> of type <span class="idlMemberType">{{float}}</span></dt>
+          <dt><dfn><code>probability</code></dfn> of type <span class="idlMemberType">{{float}}</span>, nullable</dt>
           <dd>
-            <p>A confidence value in range [0,1].
+            <p>A probability value in range ]0,1].
             The approximate probability of the detected face being really
             a human face.
-            The special value of exact zero indicates that the probability is
-            not estimated or known.</p>
+            If the value is <code>null</code>, the probability is not estimated or known.</p>
           </dd>
           <dt><dfn><code>contour</code></dfn> of type <span class="idlMemberType">{{sequence}}&lt;{{Point2D}}&gt;</span></dt>
           <dd>
@@ -741,8 +740,8 @@ dictionary HumanFace {
       <h3>{{HumanFaceLandmark}}</h3>
 <pre class="idl"
 >dictionary HumanFaceLandmark {
-  required sequence&lt;Point2D&gt;    contour;
-  HumanFaceLandmark             type;
+  sequence&lt;Point2D&gt;    contour;
+  HumanFaceLandmark    type;
 };</pre>
       <section class="notoc">
         <h4>Dictionary {{HumanFaceLandmark}} Members</h4>
