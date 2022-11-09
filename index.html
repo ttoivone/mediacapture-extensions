@@ -710,13 +710,16 @@ dictionary HumanFace {
           </dd>
           <dt><dfn><code>contour</code></dfn> of type <span class="idlMemberType">{{sequence}}&lt;{{Point2D}}&gt;</span></dt>
           <dd>
-            <p>A contour surrounding the detected face.
-            An example of a valid case is a four-point rectangle aligned to
-            the image axes which is the bounding box supported in many
-            platforms.
-            However, the API does not guarantee that the returned data is
-            anyhow aligned to image axes.
-            The points are given in image coordinates.</p>
+            <p>A contour surrounding the face. Each {{Point2D}} in the
+            sequence is interpreted to represent a coordinate in a
+            normalized square space. The origin of coordinates {x,y} =
+            {0.0, 0.0} represents the upper left corner whereas the {x,y} =
+            {1.0, 1.0} represents the lower right corner relative to the
+            rendered frame. If the sequence has a single point, it is at the
+            center of the face.</p>
+            <p>The face location in the frame may be specified even if it is
+            obscured by other objects in front of it or it lies partially or
+            fully outside of the frame.</p>
             <p>If the current {{MediaTrackSettings/faceDetectionMode}} setting
             of the {{MediaStreamTrack}} object is not
             {{FaceDetectionMode/"contour"}}, then this member will not exist.</p>
@@ -748,10 +751,16 @@ dictionary HumanFace {
         <dl class="dictionary-members" data-dfn-for="HumanFaceLandmark" data-link-for="HumanFaceLandmark">
           <dt><dfn><code>contour</code></dfn> of type <span class="idlMemberType">{{sequence}}&lt;{{Point2D}}&gt;</span></dt>
           <dd>
-            <p>A point at the center of the detected landmark, or
-            a sequence of points defining the vertices of a simple polygon
-            surrounding the landmark in either a clockwise or counter-clockwise
-            direction.</p>
+            <p>A contour surrounding the detected landmark. Each {{Point2D}} in the
+            sequence is interpreted to represent a coordinate in a
+            normalized square space. The origin of coordinates {x,y} =
+            {0.0, 0.0} represents the upper left corner whereas the {x,y} =
+            {1.0, 1.0} represents the lower right corner relative to the
+            rendered frame. If the sequence has a single point, it is at the
+            center of the landmark.</p>
+            <p>The landmark location in the frame may be specified even if it is
+            obscured by other objects in front of it or it lies partially or
+            fully outside of the frame.</p>
             <p>The length of the array is controlled by the current
             {{MediaTrackSettings/faceDetectionNumLandmarkPoints}} setting of
             the {{MediaStreamTrack}} object.</p>
