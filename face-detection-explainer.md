@@ -23,7 +23,7 @@ Face detection is the process of detecting human faces in a given scene and dist
 
 * The description of faces in frames should extend the [VideoFrameMetadata](https://www.w3.org/TR/webcodecs/#dictdef-videoframemetadata) and the description can be supplemented or replaced by Web applications.
 
-* Face detection API is able to return a **contour**. User can request a specific number of points used to describe the contour via **faceDetectionMaxContourPoints** setting and implementations can limit the maximum number of points to four and return a rectangular bounding box.
+* Face detection API should return information on detected faces and landmark as available on current platform APIs. For faces it should return bounding box and for landmarks the center point of the landmarks.
 
 * Face descriptions should allow face tracking.
 
@@ -31,7 +31,7 @@ Face detection is the process of detecting human faces in a given scene and dist
 
 * Face descriptions could be used as an input to various algorithms like Background Blur, Eye Gaze Correction, Face Framing, etc. Face detection minimizes the surface area that other algorithms need to process for a faster implementation. It should be easy to use Face detection API along with a custom Eye Gaze Correction or a Funny Hats feature from a ML framework by passing the face coordinates.
 
-* Facial landmarks like *eyes*, *nose* and *mouth* should be detected if there's support in the platform and user enables it.
+* Facial landmarks like *eyes* and *mouth* should be detected if there's support in the platform and user enables it.
 
 * The API should be as minimal as possible, while still supporting current platforms and allowing applications to ask for the minimum amount of extra computation that they need.
 
@@ -49,28 +49,22 @@ The API consists of two parts: first, metadata which describes the faces availab
 
 ```js
 partial dictionary VideoFrameMetadata {
-  sequence<HumanFace>  humanFaces;
+  sequence<HumanFace> humanFaces;
 };
 
 dictionary HumanFace {
-  long                        id;
-  float                       probability;
-  sequence<Point2D>           contour;
-  sequence<HumanFaceLandmark> landmarks;
+  long              id;
+  float             probability;
+  DOMRectReadOnly   boundingBox;
+  HumanFaceLandmark leftEye;
+  HumanFaceLandmark rightEye;
+  HumanFaceLandmark mouth;
 };
 
 dictionary HumanFaceLandmark {
-  HumanFaceLandmarkType       type;
-  sequence<Point2D>           contour;
+  Point2D           centerPoint;
 };
 
-enum HumanFaceLandmarkType {
-  "eye",
-  "eyeLeft",
-  "eyeRight",
-  "mouth",
-  "nose"
-};
 ```
 
 ### Constraints
@@ -79,30 +73,31 @@ The second part consists of constraints to `getUserMedia()` or `applyConstrains(
 
 ```js
 partial dictionary MediaTrackSupportedConstraints {
-  boolean faceDetectionMode = true;
-  boolean faceDetectionMaxContourPoints = true;
+  boolean humanFaceDetectionMode = true;
+  boolean humanFaceLandmarkDetectionMode = true;
 };
 
 partial dictionary MediaTrackCapabilities {
-  sequence<DOMString> faceDetectionMode;
-  ULongRange          faceDetectionMaxContourPoints;
+  sequence<DOMString> humanFaceDetectionMode;
+  sequence<DOMString> humanFaceLandmarkDetectionMode;
 };
 
 partial dictionary MediaTrackConstraintSet {
-  ConstrainDOMString faceDetectionMode;
-  ConstrainULong     faceDetectionMaxContourPoints;
+  ConstrainDOMString humanFaceDetectionMode;
+  ConstrainDOMString humanFaceLandmarkDetectionMode;
 };
 
 partial dictionary MediaTrackSettings {
-  DOMString faceDetectionMode;
-  long      faceDetectionMaxContourPoints;
+  DOMString humanFaceDetectionMode;
+  DOMString humanFaceLandmarkDetectionMode;
 };
 
-enum FaceDetectionMode {
-  "none",         // Face detection is not needed
-  "contour",      // Contour of the detected faces is returned
-  "landmarks",    // Contour of the detected faces is returned with facial landmarks
+enum ObjectDetectionMode {
+  "none",          // Face or landmark detection is not needed
+  "center-point",  // Center point of the detected object is returned
+  "bounding-box",  // Bounding box of the detected object is returned
 };
+
 ```
 
 ## Using the face detection API
@@ -111,27 +106,26 @@ enum FaceDetectionMode {
 
 The first part of the API adds a new member `humanFaces` of type sequence of `HumanFace` into WebCodecs [`VideoFrameMetadata`](https://www.w3.org/TR/webcodecs/#dictdef-videoframemetadata) which provides information of the detected faces in the frame. In `HumanFace`, the member `id` is used to track faces between frames: the same `id` of a face between different frames indicates that it is the same face. `probability` is the probability that the returned face is in fact a human face and not a false detection.
 
-The member `contour` provides an arbitrary number of points which enclose the face. Sophisticated implementations could provide a large number of points but initial implementations are expected to provide four contour points located in the corners of a rectangular region which gives the face bounding box. If only a single point is provided, the point should be located at the center of the face.
+The member `boundingBox` provides the enclosing bounding box for the face.
 
-The member `landmarks` provides a list of facial features belonging to the detected face, such as eyes and mouth. User agent may return accurate contour for the features, but early implementations are expected to deliver only a single point corresponding to the center of a feature.
+The members `leftEye`, `rightEye`, and `mouth` provide information on facial features belonging to the detected face. Currently this includes the center point for eyes and mouth, but we define a separate dictionary `HumanFaceLandmark` to allow extending it easily later on. 
 
-The contours of the detected faces and landmarks are described as a sequence of `Point2D` and the units
-conform to the 
+The coordinates in the members `boundingBox` and `centerPoint` of the detected faces and landmarks are defined similarly as in the
 [`pointsOfInterest`](https://w3c.github.io/mediacapture-image/#points-of-interest)
 member in [`MediaTrackSettings`](https://w3c.github.io/mediacapture-image/#dom-mediatracksettings-pointsofinterest)
-with the exception that the points may also lie outside of the frame since a detected face could be
+with the exception that the coordinates may also lie outside of the frame since a detected face could be
 partially (or in special cases even fully) outside of the visible image.
-A `Point2D` is interpreted to represent a location in a normalized square space. The origin of
+A coordinate is interpreted to represent a location in a normalized square space. The origin of
 coordinates (x,y) = (0.0, 0.0) represents the upper leftmost corner whereas the (x,y) =
 (1.0, 1.0) represents the lower rightmost corner relative to the rendered frame: the x-coordinate (columns) increases rightwards and the y-coordinate (rows) increases downwards.
 
 ### Constraints
 
-New members are added to capabilities, constraints, and settings for Web applications to enable and control face detection with `getUserMedia()` and `applyConstraints()` and to query capabilities of face detection with `getCapabilities()` methods. Web applications should not ask more facial metadata than what they need to limit computation. For example, if an applications is content with just a face bounding box, it should set the number of maximum contour points to four to prevent user agent from running potentially heavyweight face detection algorithm.
+New members are added to capabilities, constraints, and settings for Web applications to enable and control face and face landmark detection with `getUserMedia()` and `applyConstraints()` and to query capabilities of face detection with `getCapabilities()` methods. Web applications should not ask more facial metadata than what they need to limit computation. For example, if an applications is content with just a face bounding box, it should set the constraint `humanFaceLandmarkDetectionMode` to `"none"`.
 
-The enumeration constraint `faceDetectionMode` is used by applications to describe the level of facial data that they need. When `faceDetectionMode` is `contour`, user agent sets the metadata to correspond to the detected faces in video frames. When the member is `landmarks`, also the landmarks are detected and set for each face.
+The enumeration constraints `humanFaceDetectionMode` and `humanFaceLandmarkDetectionMode` set the level of detection needed for human faces and their landmarks, respectively. These settings can be one of the enumeration values in `ObjectDetectionMode`. When `humanFaceDetectionMode` is `"bounding-box"`, user agent must attempt face detection and set the metadata in video frames correspondingly. When the setting is `"none"`, face description metadata (including landmarks) is not set. Similarly, when `humanFaceLandmarkDetectionMode` is `"none"`, the landmarks (ie. members `leftEye`, `rightEye`, and `mouth` in dictionary `HumanFace`) are not set. When the setting is `"center-point"` and face detection is enabled, the user agent must attempt to detect face landmarks and set the location information in the members of type `HumanFaceLandmark` accordingly. 
 
-The integer constraint `faceDetectionMaxContourPoints` limits the number of points used to describe face and landmark locations and it may be any nonnegative number depending on platform support. However, Web application should request the minimum number of contour points that are sufficient, because that allows user agent to adjust detection algorithm complexity to minimum. The setting may be zero, in which case location of faces (or contours) is not set, just the presence of a face in the video frame. This can be useful to detect with front camera if user is watching the screen. When only a single point is provided, its location must match the center of a face or landmark, subject to algorithm accuracy.
+For now, `"center-point"` must not be supported for `humanFaceDetectionMode` and `"bounding-box"` must not be supported for `humanFaceLandmarkDetectionMode` due to limitations in current platform APIs. Furthermore, if face detection mode is `"none"`, also landmark detection setting must be the same `"none"` because without face detection results the landmark data can not be set either.
 
 ## Platform Support 
 
@@ -169,7 +163,7 @@ Javacript test programs were created to capture frames and to detect faces at VG
 
 ## Key scenarios
 
-Currently common platforms such as ChromeOS, Android, and Windows support system APIs which return only face bounding box and landmarks, not accurate contour, and therefore initial implementations are expected to support only a bounding box (ie. a contour with maximum of four points). These features can be used as the major building block in several scenarios such as:
+Currently common platforms such as ChromeOS, Android, and Windows support system APIs which return face bounding box and landmarks. This information can be used as the major building block in several scenarios such as:
 
 * Auto-mute: a videoconferencing application can automatically mute microphone or blank camera image if user (face) presence is not detected.
 
@@ -190,7 +184,7 @@ Currently common platforms such as ChromeOS, Android, and Windows support system
 // main.js:
 // Check if face detection is supported by the browser
 const supports = navigator.mediaDevices.getSupportedConstraints();
-if (supports.faceDetectionMode) {
+if (supports.humanFaceDetectionMode) {
   // Browser supports face detection.
 } else {
   throw('Face detection is not supported');
@@ -198,7 +192,7 @@ if (supports.faceDetectionMode) {
 
 // Open camera with face detection enabled
 const stream = await navigator.mediaDevices.getUserMedia({
-  video: { faceDetectionMode: 'contour' }
+  video: { humanFaceDetectionMode: 'bounding-box' }
 });
 const [videoTrack] = stream.getVideoTracks();
 
@@ -220,11 +214,10 @@ self.onmessage = async function(e) {
   const videoTransformer = new TransformStream({
     async transform(videoFrame, controller) {
       for (const face of videoFrame.metadata().humanFaces || []) {
-        let s = '';
-        for (const f of face.contour || []) {
-          s += `(${f.x}, ${f.y}),`
-        }
-        console.log(`Face @ (${s})`);
+        console.log(`Face @ (${face.boundingBox.left},` +
+                            `${face.boundingBox.top},` +
+                            `${face.boundingBox.right},` +
+                            `${face.boundingBox.bottom})`);
       }
       controller.enqueue(videoFrame);
     }

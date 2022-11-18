@@ -9,7 +9,7 @@
   // See https://github.com/w3c/respec/wiki/ for how to configure ReSpec
   var respecConfig = {
     group: "webrtc",
-    xref: ["html", "infra", "permissions", "dom", "image-capture", "mediacapture-streams", "webaudio", "webcodecs", "webidl"],
+    xref: ["geometry-1", "html", "infra", "permissions", "dom", "image-capture", "mediacapture-streams", "webaudio", "webcodecs", "webidl"],
     edDraftURI: "https://w3c.github.io/mediacapture-extensions/",
     editors:  [
       {name: "Jan-Ivar Bruaroey", company: "Mozilla Corporation", w3cid: 79152},
@@ -657,9 +657,9 @@ partial interface MediaStreamTrack {
   <section>
     <h2>Human faces</h2>
     <p>Human face metadata describes the human faces in video frames. It can
-    be set by web applications using the standard means for setting
-    {{VideoFrameMetadata}} in {{VideoFrame}}s or it can be set by a video
-    capture device when the media track constraints, defined below, are used to
+    be set by web applications using the standard means when creating
+    {{VideoFrameMetadata}} for {{VideoFrame}}s or it can be set by an user agent
+    when the media track constraints, defined below, are used to
     enable face detection for the {{MediaStreamTrack}} which provides the
     {{VideoFrame}}s.</p>
     <p>The facial metadata may be used by video encoders to enhance the quality
@@ -672,7 +672,7 @@ partial dictionary VideoFrameMetadata {
 };</pre>
       <section class="notoc">
         <h4>Members</h4>
-        <dl class="dictionary-members" data-link-for="VideoFrame" data-dfn-for="VideoFrame">
+        <dl class="dictionary-members" data-link-for="VideoFrameMetadata" data-dfn-for="VideoFrameMetadata">
           <dt><dfn><code>humanFaces</code></dfn> of type <span class="idlMemberType"><code>sequence&lt;{{HumanFace}}&gt;</code></span></dt>
           <dd>
             <p>The set of known human faces in this video frame.</p>
@@ -684,10 +684,12 @@ partial dictionary VideoFrameMetadata {
       <h3>{{HumanFace}}</h3>
       <pre class="idl">
 dictionary HumanFace {
-  long                           id;
-  float                          probability;
-  sequence&lt;Point2D&gt;              contour;
-  sequence&lt;HumanFaceLandmark&gt;    landmarks;
+  long              id;
+  float             probability;
+  DOMRectReadOnly   boundingBox;
+  HumanFaceLandmark leftEye;
+  HumanFaceLandmark rightEye;
+  HumanFaceLandmark mouth;
 };</pre>
       <section class="notoc">
         <h4>Dictionary {{HumanFace}} Members</h4>
@@ -703,31 +705,29 @@ dictionary HumanFace {
             <p>If set, a probability value in range (0,1].
             The approximate probability of the {{HumanFace}} specifying an actual human face.</p>
           </dd>
-          <dt><dfn><code>contour</code></dfn> of type <span class="idlMemberType"><code>sequence&lt;{{Point2D}}&gt;</code></span></dt>
+          <dt><dfn><code>boundingBox</code></dfn> of type <span class="idlMemberType"><code>{{DOMRectReadOnly}}</code></span></dt>
           <dd>
-            <p>A contour surrounding the face. Each {{Point2D}} in the
-            sequence is interpreted to represent a coordinate in a
+            <p>A bounding box surrounding the face. The corner coordinates of the
+            bounding box are interpreted to represent a coordinate in a
             normalized square space. The origin of coordinates {x,y} =
             {0.0, 0.0} represents the upper left corner whereas the {x,y} =
             {1.0, 1.0} represents the lower right corner relative to the
-            rendered frame. If the sequence has a single point, it is at the
-            center of the face.</p>
+            rendered frame.</p>
             <p>The face location in the frame may be specified even if it is
             obscured by other objects in front of it or it lies partially or
             fully outside of the frame.</p>
-            <p>{{MediaTrackSettings/faceDetectionMaxContourPoints}} setting is the maximum length of the
-            array which may be set by the {{MediaStreamTrack}} source.</p>
-            <p>If the face contour or location can not be determined with sufficient
-	    accuracy or if the {{MediaTrackSettings/faceDetectionMaxContourPoints}} is zero,
-	    then this member will not be set by the {{MediaStreamTrack}} source. </p>
           </dd>
-          <dt><dfn><code>landmarks</code></dfn> of type <span class="idlMemberType"><code>sequence&lt;{{HumanFaceLandmark}}&gt;</code></span></dt>
+          <dt><dfn><code>leftEye</code></dfn> of type <span class="idlMemberType"><code>{{HumanFaceLandmark}}</code></span></dt>
           <dd>
-            <p>A set of features of interest related to the detected
-            face.</p>
-            <p>If the current {{MediaTrackSettings/faceDetectionMode}}
-            setting of the {{MediaStreamTrack}} source is not
-            <code>{{FaceDetectionMode/"landmarks"}}</code>, then this member must not be set by the {{MediaStreamTrack}} source.</p>
+            <p>If exists, describes the face left eye properties.</p>
+          </dd>
+          <dt><dfn><code>rightEye</code></dfn> of type <span class="idlMemberType"><code>{{HumanFaceLandmark}}</code></span></dt>
+          <dd>
+            <p>If exists, describes the face right eye properties.</p>
+          </dd>
+          <dt><dfn><code>mouth</code></dfn> of type <span class="idlMemberType"><code>{{HumanFaceLandmark}}</code></span></dt>
+          <dd>
+            <p>If exists, describes the face mouth properties.</p>
           </dd>
         </dl>
       </section>
@@ -735,55 +735,18 @@ dictionary HumanFace {
     <section>
       <h3>{{HumanFaceLandmark}}</h3>
 <pre class="idl">dictionary HumanFaceLandmark {
-  HumanFaceLandmarkType  type;
-  sequence&lt;Point2D&gt;      contour;
+  Point2D centerPoint;
 };</pre>
       <section class="notoc">
         <h4>Dictionary {{HumanFaceLandmark}} Members</h4>
         <dl class="dictionary-members" data-dfn-for="HumanFaceLandmark" data-link-for="HumanFaceLandmark">
-          <dt><dfn><code>type</code></dfn> of type <span class="idlMemberType">{{HumanFaceLandmarkType}}</span></dt>
-          <dd><p>The type of the detected landmark.</p></dd>
-          <dt><dfn><code>contour</code></dfn> of type <span class="idlMemberType"><code>sequence&lt;{{Point2D}}&gt;</code></span></dt>
-          <dd>
-            <p>A contour surrounding the detected landmark. See the member
-            {{HumanFace/contour}} in {{HumanFace}} for the definition of the
-            coordinate space.</p>
-            <p>The landmark location in the frame may be specified even if it is
+          <dt><dfn><code>centerPoint</code></dfn> of type <span class="idlMemberType">{{Point2D}}</span></dt>
+          <dd><p>The coordinates of the approximate center of the detected landmark.
+            The landmark location in the frame may be specified even if it is
             obscured by other objects in front of it or it lies partially or
-            fully outside of the frame.</p>
-            <p>If the array was set by a {{MediaStreamTrack}} source, its
-            length is limited by the current
-            {{MediaTrackSettings/faceDetectionMaxContourPoints}} setting.</p>
+            fully outside of the frame. See member {{HumanFace/boundingBox}} for definition
+            of the coordinate system.</p>
           </dd>
-        </dl>
-      </section>
-    </section>
-    <section>
-      <h3>{{HumanFaceLandmarkType}}</h3>
-<pre class="idl">
-enum HumanFaceLandmarkType {
-  "eye",
-  "eyeLeft",
-  "eyeRight",
-  "mouth",
-  "nose"
-};</pre>
-      <section class="notoc">
-        <h4>{{HumanFaceLandmarkType}} Enumeration Description</h4>
-        <dl data-dfn-for="HumanFaceLandmarkType" data-link-for="HumanFaceLandmarkType">
-          <dt><dfn><code>eye</code></dfn></dt>
-          <dd>
-            <p>The landmark is identified as a human eye,
-            either left or right.</p>
-          </dd>
-          <dt><dfn><code>eyeLeft</code></dfn></dt>
-          <dd><p>The landmark is identified as a human left eye.</p></dd>
-          <dt><dfn><code>eyeRight</code></dfn></dt>
-          <dd><p>The landmark is identified as a human right eye.</p></dd>
-          <dt><dfn><code>mouth</code></dfn></dt>
-          <dd><p>The landmark is identified as a human mouth.</p></dd>
-          <dt><dfn><code>nose</code></dfn></dt>
-          <dd><p>The landmark is identified as a human nose.</p></dd>
         </dl>
       </section>
     </section>
@@ -791,21 +754,19 @@ enum HumanFaceLandmarkType {
       <h3>{{MediaTrackSupportedConstraints}}</h3>
 <pre class="idl">
 partial dictionary MediaTrackSupportedConstraints {
-  boolean faceDetectionMode = true;
-  boolean faceDetectionMaxContourPoints = true;
+  boolean humanFaceDetectionMode = true;
+  boolean humanFaceLandmarkDetectionMode = true;
 };</pre>
       <section class="notoc">
         <h4>Dictionary {{MediaTrackSupportedConstraints}} Members</h4>
         <dl class="dictionary-members" data-dfn-for="MediaTrackSupportedConstraints" data-link-for="MediaTrackSupportedConstraints">
-          <dt><dfn><code>faceDetectionMode</code></dfn> of type <span class="idlMemberType">{{boolean}}</span>, defaulting to <code>true</code></dt>
+          <dt><dfn><code>humanFaceDetectionMode</code></dfn> of type <span class="idlMemberType">{{boolean}}</span>, defaulting to <code>true</code></dt>
           <dd>
-            <p>Whether <a>face detection mode</a> constraining is
-            recognized.</p>
+            <p>Whether <a>face detection mode</a> constraining is recognized.</p>
           </dd>
-          <dt><dfn><code>faceDetectionMaxContourPoints</code></dfn> of type <span class="idlMemberType">{{boolean}}</span>, defaulting to <code>true</code></dt>
+          <dt><dfn><code>humanFaceLandmarkDetectionMode</code></dfn> of type <span class="idlMemberType">{{boolean}}</span>, defaulting to <code>true</code></dt>
           <dd>
-            <p>Whether <a>maximum number of face detection contour points</a>
-            constraining is recognized.</p>
+            <p>Whether <a>face landmark detection mode</a> constraining is recognized.</p>
           </dd>
         </dl>
       </section>
@@ -814,22 +775,21 @@ partial dictionary MediaTrackSupportedConstraints {
       <h3>{{MediaTrackCapabilities}}</h3>
       <pre class="idl">
 partial dictionary MediaTrackCapabilities {
-  sequence&lt;DOMString&gt; faceDetectionMode;
-  ULongRange          faceDetectionMaxContourPoints;
+  sequence&lt;DOMString&gt; humanFaceDetectionMode;
+  sequence&lt;DOMString&gt; humanFaceLandmarkDetectionMode;
 };</pre>
       <section class="notoc">
         <h4>Dictionary {{MediaTrackCapabilities}} Members</h4>
         <dl class="dictionary-members" data-dfn-for="MediaTrackCapabilities" data-link-for="MediaTrackCapabilities">
-          <dt><dfn><code>faceDetectionMode</code></dfn> of type <span class="idlMemberType">sequence&lt;{{DOMString}}&gt;</span></dt>
+          <dt><dfn><code>humanFaceDetectionMode</code></dfn> of type <span class="idlMemberType">sequence&lt;{{DOMString}}&gt;</span></dt>
           <dd>
-            <p>A sequence of supported <a>face detection modes</a>.
-            Each string MUST be one of the members of {{FaceDetectionMode}}. If {{FaceDetectionMode/"landmarks"}} is supported,
-            then also {{FaceDetectionMode/"contour"}} MUST be supported.</p>
+            <p>The sequence of supported <a>face detection modes</a>.
+            Each string MUST be one of the members of {{ObjectDetectionMode}}. The mode {{ObjectDetectionMode/"center-point"}} must not be supported.</p>
           </dd>
-          <dt><dfn><code>faceDetectionMaxContourPoints</code></dfn> of type <span class="idlMemberType">{{ULongRange}}</span></dt>
+          <dt><dfn><code>humanFaceLandmarkDetectionMode</code></dfn> of type <span class="idlMemberType">sequence&lt;{{DOMString}}&gt;</span></dt>
           <dd>
-            <p>The supported range for the <a>maximum number of face detection contour
-            points</a>.</p>
+            <p>The sequence of supported <a>face landmark detection modes</a>.
+            Each string MUST be one of the members of {{ObjectDetectionMode}}. The mode {{ObjectDetectionMode/"bounding-box"}} must not be supported.</p>
           </dd>
         </dl>
       </section>
@@ -838,20 +798,21 @@ partial dictionary MediaTrackCapabilities {
       <h3>{{MediaTrackConstraintSet}}</h3>
 <pre class="idl">
 partial dictionary MediaTrackConstraintSet {
-  ConstrainDOMString faceDetectionMode;
-  ConstrainULong     faceDetectionMaxContourPoints;
+  ConstrainDOMString humanFaceDetectionMode;
+  ConstrainDOMString humanFaceLandmarkDetectionMode;
 };</pre>
       <section class="notoc">
         <h4>Dictionary {{MediaTrackConstraintSet}} Members</h4>
         <dl class="dictionary-members" data-dfn-for="MediaTrackConstraintSet" data-link-for="MediaTrackConstraintSet">
-          <dt><dfn><code>faceDetectionMode</code></dfn> of type <span class="idlMemberType">{{ConstrainDOMString}}</span></dt>
+          <dt><dfn><code>humanFaceDetectionMode</code></dfn> of type <span class="idlMemberType">{{ConstrainDOMString}}</span></dt>
           <dd>
-            <p>The string MUST be one of the members of {{FaceDetectionMode}}.
+            <p>The string MUST be one of the members of {{ObjectDetectionMode}}.
             See <a>face detection mode</a> constrainable property.</p>
           </dd>
-          <dt><dfn><code>faceDetectionMaxContourPoints</code></dfn> of type <span class="idlMemberType">{{ConstrainULong}}</span></dt>
+          <dt><dfn><code>humanFaceLandmarkDetectionMode</code></dfn> of type <span class="idlMemberType">{{ConstrainDOMString}}</span></dt>
           <dd>
-            <p>See <a>maximum number of face detection contour points</a> constrainable property.</p>
+            <p>The string MUST be one of the members of {{ObjectDetectionMode}}.
+            See <a>face landmark detection mode</a> constrainable property.</p>
           </dd>
         </dl>
       </section>
@@ -860,50 +821,51 @@ partial dictionary MediaTrackConstraintSet {
       <h3>{{MediaTrackSettings}}</h3>
 <pre class="idl">
 partial dictionary MediaTrackSettings {
-  DOMString faceDetectionMode;
-  long      faceDetectionMaxContourPoints;
+  DOMString humanFaceDetectionMode;
+  DOMString humanFaceLandmarkDetectionMode;
 };</pre>
       <section class="notoc">
         <h4>Dictionary {{MediaTrackSettings}} Members</h4>
         <dl class="dictionary-members" data-dfn-for="MediaTrackSettings" data-link-for="MediaTrackSettings">
-          <dt><dfn><code>faceDetectionMode</code></dfn> of type <span class="idlMemberType">{{DOMString}}</span></dt>
+          <dt><dfn><code>humanFaceDetectionMode</code></dfn> of type <span class="idlMemberType">{{DOMString}}</span></dt>
           <dd>
             <p>Current <a>face detection mode</a> setting.
-            The string MUST be one of the members of {{FaceDetectionMode}}.</p>
+            The string MUST be one of the members of {{ObjectDetectionMode}} excluding {{ObjectDetectionMode/"center-point"}}.</p>
           </dd>
-          <dt><dfn><code>faceDetectionMaxContourPoints</code></dfn> of type <span class="idlMemberType">{{long}}</span></dt>
+          <dt><dfn><code>humanFaceLandmarkDetectionMode</code></dfn> of type <span class="idlMemberType">{{DOMString}}</span></dt>
           <dd>
-            <p>Current <a>maximum number of face detection contour points</a> setting.</p>
+            <p>Current <a>face landmark detection mode</a> setting.
+            The string MUST be one of the members of {{ObjectDetectionMode}} excluding {{ObjectDetectionMode/"bounding-box"}}.</p>
           </dd>
         </dl>
       </section>
     </section>
     <section>
-      <h3>{{FaceDetectionMode}}</h3>
+      <h3>{{ObjectDetectionMode}}</h3>
 <pre class="idl">
-enum FaceDetectionMode {
+enum ObjectDetectionMode {
   "none",
-  "contour",
-  "landmarks",
+  "center-point",
+  "bounding-box",
 };</pre>
       <section class="notoc">
-        <h4>{{FaceDetectionMode}} Enumeration Description</h4>
-        <dl data-dfn-for="FaceDetectionMode" data-link-for="FaceDetectionMode">
+        <h4>{{ObjectDetectionMode}} Enumeration Description</h4>
+        <dl data-dfn-for="ObjectDetectionMode" data-link-for="ObjectDetectionMode">
           <dt><dfn><code>none</code></dfn></dt>
           <dd>
-            <p>This source does not offer human face detection.
+            <p>This source does not offer object detection for the corresponding object type.
             For setting, this is interpreted as a command to turn off
-            the face detection and setting of facial metadata.</p>
+            the setting of the corresponding object type detection metadata.</p>
           </dd>
-          <dt><dfn><code>contour</code></dfn></dt>
+          <dt><dfn><code>center-point</code></dfn></dt>
           <dd>
-            <p>This source offers human face contour detection,
-            or such a mode is requested.</p>
+            <p>This source offers detection of the center point of the corresponding
+            object type, either a human face or a face landmark, or such a mode is requested.</p>
           </dd>
-          <dt><dfn><code>landmarks</code></dfn></dt>
+          <dt><dfn><code>bounding-box</code></dfn></dt>
           <dd>
-            <p>This source offers both human face and landmarks with contour detection,
-            or such a mode is requested.</p>
+            <p>This source offers detection of the bounding box of the corresponding
+            object type, either a human face or a face landmark, or such a mode is requested.</p>
           </dd>
         </dl>
       </section>
@@ -912,19 +874,12 @@ enum FaceDetectionMode {
       <h3>Constrainable Properties</h3>
       <ol>
         <li>
-          <p><dfn>Face detection mode</dfn> describes which face details
+          <p><dfn>Face detection mode</dfn> describes which face properties
           are to be detected and set in the metadata for the video frame.</p>
         </li>
         <li>
-          <p><dfn>Maximum number of face detection contour points</dfn> descibes how
-          many contour points should be detected and exposed for each face
-          or landmark. User agent may return smaller number of contour points,
-	  for example when the number of supported contour points
-          is different for faces and landmarks. </p>
-	  <p>This value may be zero, in which case only the presence of the face
-	  is indicated, not its location nor contour. The value can be also one,
-	  in which case the single point in the array must indicate the center of
-	  the face or landmark.</p>
+          <p><dfn>Face landmark detection mode</dfn> describes which face landmark
+	  properties are to be detected and set in the metadata for the video frame.</p>
         </li>
       </ol>
     </section>
@@ -934,8 +889,7 @@ enum FaceDetectionMode {
 // main.js:
 // Check if face detection is supported by the browser
 const supports = navigator.mediaDevices.getSupportedConstraints();
-if (supports.faceDetectionMode &amp;&amp;
-    supports.faceDetectionMaxContourPoints) {
+if (supports.humanFaceDetectionMode) {
   // Browser supports face contour detection.
 } else {
   throw('Face contour detection is not supported');
@@ -943,10 +897,7 @@ if (supports.faceDetectionMode &amp;&amp;
 
 // Open camera with face detection enabled
 const stream = await navigator.mediaDevices.getUserMedia({
-  video: {
-    faceDetectionMode: 'contour',
-    faceDetectionMaxContourPoints: {exact: 4}
-  }
+  video: { humanFaceDetectionMode: 'bounding-box' }
 });
 const [videoTrack] = stream.getVideoTracks();
 
@@ -965,12 +916,10 @@ self.onmessage = async ({data: {track}}) => {
   const transformer = new TransformStream({
     async transform(frame, controller) {
       for (const face of frame.metadata().humanFaces || []) {
-        if ((face.contour || []).length == 4) {
+        if (face.boundingBox) {
           console.log(
-            `Face @ (${face.contour[0].x}, ${face.contour[0].y}), ` +
-                   `(${face.contour[1].x}, ${face.contour[1].y}), ` +
-                   `(${face.contour[2].x}, ${face.contour[2].y}), ` +
-                   `(${face.contour[3].x}, ${face.contour[3].y})`);
+            `Face @ (${face.boundingBox.left}, ${face.face.boundingBox.top}), ` +
+                   `(${face.boundingBox.right}, ${face.face.boundingBox.bottom})`);
         }
       }
       controller.enqueue(frame);
@@ -999,6 +948,7 @@ self.onmessage = async ({data: {track}}) => {
   let customEyeGazeCorrection = true;
   let customFaceDetection = false;
   let faceDetectionMode;
+  let landmarkDetectionMode;
   const capabilities = track.getCapabilities();
   if (capabilities.backgroundBlur &amp;&amp; capabilities.backgroundBlur.max &gt; 0) {
     // The platform supports background blurring.
@@ -1007,13 +957,13 @@ self.onmessage = async ({data: {track}}) => {
       advanced: [{backgroundBlur: capabilities.backgroundBlur.max}]
     });
     customBackgroundBlur = false;
-  } else if ((capabilities.faceDetectionMode || []).includes('contour')) {
-    // The platform supports face contour detection but not background
-    // blurring. Let's use platform face contour detection to aid custom
+  } else if ((capabilities.humanFaceDetectionMode || []).includes('bounding-box')) {
+    // The platform supports face bounding box detection but not background
+    // blurring. Let's use platform face detection to aid custom
     // background blurring.
-    faceDetectionMode = 'contour';
+    faceDetectionMode = 'bounding-box';
     await videoTrack.applyConstraints({
-      advanced: [{faceDetectionMode}]
+      advanced: [{ humanFaceDetectionMode: faceDetectionMode }]
     });
   } else {
     // The platform does not support background blurring nor face contour
@@ -1028,15 +978,13 @@ self.onmessage = async ({data: {track}}) => {
       advanced: [{eyeGazeCorrection: true}]
     });
     customEyeGazeCorrection = false;
-  } else if ((capabilities.faceDetectionMode || []).includes('landmarks')) {
+  } else if ((capabilities.humanFaceLandmarkDetectionMode || []).includes('center-point')) {
     // The platform supports face landmark detection but not eye gaze
     // correction. Let's use platform face landmark detection to aid custom eye
     // gaze correction.
-    faceDetectionMode = 'landmarks';
+    landmarkDetectionMode = 'center-point';
     await videoTrack.applyConstraints({
-      advanced: [{
-        faceDetectionMode
-      }]
+      advanced: [{ humanFaceLandmarkDetectionMode: landmarkDetectionMode }]
     });
   } else {
     // The platform does not support eye gaze correction nor face landmark
