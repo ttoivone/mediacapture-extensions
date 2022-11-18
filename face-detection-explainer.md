@@ -49,12 +49,12 @@ The API consists of two parts: first, metadata which describes the faces availab
 
 ```js
 partial dictionary VideoFrameMetadata {
-  sequence<HumanFace>? humanFaces;
+  sequence<HumanFace>  humanFaces;
 };
 
 dictionary HumanFace {
-  long?                       id;
-  float?                      probability;
+  long                        id;
+  float                       probability;
   sequence<Point2D>           contour;
   sequence<HumanFaceLandmark> landmarks;
 };
@@ -109,7 +109,7 @@ enum FaceDetectionMode {
 
 ### Metadata
 
-The first part of the API adds a new member `humanFaces` of type sequence of `HumanFace` into WebCodecs [`VideoFrameMetadata`](https://www.w3.org/TR/webcodecs/#dictdef-videoframemetadata) which provides information of the detected faces in the frame. In `HumanFace`, the member `id` is used to track faces between frames: the same `id` of a face between different frames indicates that it is the same face. `probability`, when not null, is the probability that the returned face is in fact a human face and not a false detection.
+The first part of the API adds a new member `humanFaces` of type sequence of `HumanFace` into WebCodecs [`VideoFrameMetadata`](https://www.w3.org/TR/webcodecs/#dictdef-videoframemetadata) which provides information of the detected faces in the frame. In `HumanFace`, the member `id` is used to track faces between frames: the same `id` of a face between different frames indicates that it is the same face. `probability` is the probability that the returned face is in fact a human face and not a false detection.
 
 The member `contour` provides an arbitrary number of points which enclose the face. Sophisticated implementations could provide a large number of points but initial implementations are expected to provide four contour points located in the corners of a rectangular region which gives the face bounding box. If only a single point is provided, the point should be located at the center of the face.
 
