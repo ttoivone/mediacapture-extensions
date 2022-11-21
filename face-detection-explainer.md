@@ -25,7 +25,7 @@ Face detection is the process of detecting human faces in a given scene and dist
 
 * Face detection API should return information on detected faces and landmark as available on current platform APIs. For faces it should return bounding box and for landmarks the center point of the landmarks.
 
-* Face descriptions should allow face tracking.
+* Face descriptions should allow face tracking but not face recognizion or correlation of faces between different sources.
 
 * Face detection API should work with [TransformStream](https://developer.mozilla.org/en-US/docs/Web/API/TransformStream).
 
@@ -104,7 +104,7 @@ enum ObjectDetectionMode {
 
 ### Metadata
 
-The first part of the API adds a new member `humanFaces` of type sequence of `HumanFace` into WebCodecs [`VideoFrameMetadata`](https://www.w3.org/TR/webcodecs/#dictdef-videoframemetadata) which provides information of the detected faces in the frame. In `HumanFace`, the member `id` is used to track faces between frames: the same `id` of a face between different frames indicates that it is the same face. `probability` is the probability that the returned face is in fact a human face and not a false detection.
+The first part of the API adds a new member `humanFaces` of type sequence of `HumanFace` into WebCodecs [`VideoFrameMetadata`](https://www.w3.org/TR/webcodecs/#dictdef-videoframemetadata) which provides information of the detected faces in the frame. In `HumanFace`, the member `id` is used to track faces between frames: the same `id` of a face between different frames indicates that it is the same face under tracking. However, it is specifically required that it must not be possible to correlate faces between different sources or video sequences by matching the `id` between them. If host uses face recognizion to track faces, it must assign a random integer to `id` between sequences to avoid privacy issues. `probability` is the probability that the returned face is in fact a human face and not a false detection.
 
 The member `boundingBox` provides the enclosing bounding box for the face.
 

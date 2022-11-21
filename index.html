@@ -696,9 +696,11 @@ dictionary HumanFace {
         <dl class="dictionary-members" data-dfn-for="HumanFace" data-link-for="HumanFace">
           <dt><dfn><code>id</code></dfn> of type <span class="idlMemberType">{{long}}</span></dt>
           <dd>
-            <p>If set, an unique identifer of a face.
-            If the same face can be tracked in multiple frames originating from the same {{MediaStreamTrack}} source,
-            {{id}} is set to the same value for the face in all frames.</p>
+            <p>If set, an unique identifer of a face within a sequence. If the same face can be tracked in multiple
+            frames originating from the same {{MediaStreamTrack}} source, {{id}} is set to the same integer value
+            for the face in all frames.</p>
+            <p>User agent MUST NOT select the assigned value of {{id}} in such a way that the detected faces could
+            be correlated to match in any way between different {{MediaStreamTrack}} objects.</p>
           </dd>
           <dt><dfn><code>probability</code></dfn> of type <span class="idlMemberType">{{float}}</span></dt>
           <dd>
@@ -879,7 +881,7 @@ enum ObjectDetectionMode {
         </li>
         <li>
           <p><dfn>Face landmark detection mode</dfn> describes which face landmark
-	  properties are to be detected and set in the metadata for the video frame.</p>
+          properties are to be detected and set in the metadata for the video frame.</p>
         </li>
       </ol>
     </section>
