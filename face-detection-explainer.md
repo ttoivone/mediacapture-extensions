@@ -237,15 +237,20 @@ self.onmessage = async function(e) {
 
 [If appropriate, explain the reasons given by other implementors for their concerns.]
 
-## References & acknowledgements
+## Acknowledgements
 
 Many thanks for valuable feedback and advice from:
 
 - Bernard Aboba
 - Harald Alvestrand
 - Jan-Ivar Bruaroey
+- Dale Curtis
 - Youenn Fablet
 - Dominique Hazael-Massieux
+- Chris Needham
+- Tim Panton
+- Dan Sanders
+- ...and anyone we missed
 
 ## Disclaimer
 
