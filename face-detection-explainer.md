@@ -37,7 +37,7 @@ Face detection is the process of detecting human faces in a given scene and dist
 
 ## Non-goals
 
-* Face detection API does not need to support facial expressions. Many platforms support *blink* and *smile* and machine learning frameworks support a diverse set of expressions, typically *anger*, *disgust*, *fear*, *happiness*, *sadness*, *surprise*, and *neutral*.  [Many people](https://www.w3.org/2021/11/24-webrtc-minutes.html#t04) felt that expressions are too subjective and there's a concern of misdetecting expressions.
+* Face detection API must not support facial expressions. Many platforms support *blink* and *smile* and machine learning frameworks support a diverse set of expressions, typically *anger*, *disgust*, *fear*, *happiness*, *sadness*, *surprise*, and *neutral*.  [Many people](https://www.w3.org/2021/11/24-webrtc-minutes.html#t04) felt that expressions are too subjective and there's a concern of misdetecting expressions.
 
 * Face detection API does not need to return a mesh corresponding to the detected faces. Even though TensorFlow returns a 468-landmark FaceMesh and most DNNs can return something similar, mesh is not supported on any platforms presently, and for the sake of simplicity, it is excluded for now. However, in the long term it may be appropriate to extend the face detection API to be able to also return mesh-based face detection results. This is left for future work.
 
