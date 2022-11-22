@@ -232,7 +232,7 @@ self.onmessage = async function(e) {
 
 [Implementors and other stakeholders may already have publicly stated positions on this work. If you can, list them here with links to evidence as appropriate.]
 
-- [Firefox] : No signals
+- [[Firefox](https://github.com/mozilla/standards-positions/issues/706)] : No signals
 - [Safari] : No signals
 
 [If appropriate, explain the reasons given by other implementors for their concerns.]
