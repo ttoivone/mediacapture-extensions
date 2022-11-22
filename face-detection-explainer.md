@@ -12,7 +12,7 @@
 ## Introduction
 
 This document describes a proposal to the WebRTC WG. At this stage, this proposal has not been accepted by the WG.
-Face detection is the process of detecting human faces in a given scene and distinguishing them from other objects. There are multiple ways to perform face detection on the Web. Libraries and machine learning frameworks (with WebAssembly and WebGL backend) exist, both proprietary and open source, which can perform  face detection either in client within the browser or using a vendor cloud service. Computation in vendor cloud adds latencies depending on network speed and adds dependency to third party service. 
+Face detection is the process of detecting human faces in a given scene and distinguishing them from other objects. There are multiple ways to perform face detection on the Web. Libraries and machine learning (ML) frameworks (with WebAssembly and WebGL backend) exist, both proprietary and open source, which can perform  face detection either in client within the browser or using a vendor cloud service. Computation in vendor cloud adds latencies depending on network speed and adds dependency to third party service. 
 
 [Shape Detection API has a FaceDetector](https://wicg.github.io/shape-detection-api/) which enables Web applications to use a system provided face detector, but it requires image data to be provided by the Web app itself. It surely helps that it works on images to detect faces, but from a video conference perspective, it means the app would first need to capture frames from a camera and then feed them as input to the Shape Detection API. Many platforms offer a camera API which can perform face detection directly on image frames from the system camera. Cameras run a face detection algorithm by default to make their 3A algorithms work better. Both Windows and ChromeOS offer native platforms APIs to hook into those algorithms and offer performant face detection to the Web.
 
@@ -29,7 +29,7 @@ Face detection is the process of detecting human faces in a given scene and dist
 
 * Face detection API should work with [TransformStream](https://developer.mozilla.org/en-US/docs/Web/API/TransformStream).
 
-* Face descriptions could be used as an input to various algorithms like Background Blur, Eye Gaze Correction, Face Framing, etc. Face detection minimizes the surface area that other algorithms need to process for a faster implementation. It should be easy to use Face detection API along with a custom Eye Gaze Correction or a Funny Hats feature from a ML framework by passing the face coordinates.
+* Face descriptions could be used as an input to various algorithms like background blur, eye gaze correction, face framing, etc. Face detection minimizes the surface area that other algorithms need to process for a faster implementation. It should be easy to use face detection API along with a custom eye gaze correction or the Funny Hats feature from a ML framework by passing the face coordinates.
 
 * Facial landmarks like *eyes* and *mouth* should be detected if there's support in the platform and user enables it.
 
@@ -37,7 +37,7 @@ Face detection is the process of detecting human faces in a given scene and dist
 
 ## Non-goals
 
-* Face detection API must not support facial expressions. Many platforms support *blink* and *smile* and machine learning frameworks support a diverse set of expressions, typically *anger*, *disgust*, *fear*, *happiness*, *sadness*, *surprise*, and *neutral*.  [Many people](https://www.w3.org/2021/11/24-webrtc-minutes.html#t04) felt that expressions are too subjective and there's a concern of misdetecting expressions.
+* Face detection API must not support facial expressions. Many platforms support *blink* and *smile* and ML frameworks support a diverse set of expressions, typically *anger*, *disgust*, *fear*, *happiness*, *sadness*, *surprise*, and *neutral*.  [Many people](https://www.w3.org/2021/11/24-webrtc-minutes.html#t04) felt that expressions are too subjective and there's a concern of misdetecting expressions.
 
 * Face detection API does not need to return a mesh corresponding to the detected faces. Even though TensorFlow returns a 468-landmark FaceMesh and most DNNs can return something similar, mesh is not supported on any platforms presently, and for the sake of simplicity, it is excluded for now. However, in the long term it may be appropriate to extend the face detection API to be able to also return mesh-based face detection results. This is left for future work.
 
@@ -130,7 +130,7 @@ For now, `"center-point"` must not be supported for `humanFaceDetectionMode` and
 ## Platform Support 
 
 
-| OS               | API              | FaceDetection|
+| OS               | API              | face detection|
 | ------------- |:-------------:| :-----:|
 | Windows      | Media Foundation|   [KSPROPERTY_CAMERACONTROL_EXTENDED_FACEDETECTION ](https://docs.microsoft.com/en-us/windows-hardware/drivers/stream/ksproperty-cameracontrol-extended-facedetection?redirectedfrom=MSDN)|
 | ChromeOS/Android      | Camera HAL3 | [STATISTICS_FACE_DETECT_MODE_FULL  ](https://developer.android.com/reference/android/hardware/camera2/CameraMetadata#STATISTICS_FACE_DETECT_MODE_FULL)[STATISTICS_FACE_DETECT_MODE_SIMPLE ](https://developer.android.com/reference/android/hardware/camera2/CameraMetadata#STATISTICS_FACE_DETECT_MODE_SIMPLE)|
@@ -171,7 +171,7 @@ Currently common platforms such as ChromeOS, Android, and Windows support system
 
 * Face enhancement: application can apply various image enhancement filters to user's face. The filters may be either designed exclusively to faces, or when it is desired to save computation, background can be excluded from the filtering.
 
-* Funny hats: application may want to render augmented reality on top of user faces by drawing features such as glasses or a hat. For accurate rendering, facial landmarks would be preferred.
+* Funny Hats: application may want to render augmented reality on top of user faces by drawing features such as glasses or a hat. For accurate rendering, facial landmarks would be preferred.
 
 * Video encoding: many video encoders can allocate higher amount of bits to given locations in frames. Face bounding boxes can be used to increase the visual quality of faces at the cost of lower background quality.
 
