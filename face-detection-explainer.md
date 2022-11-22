@@ -151,7 +151,7 @@ Javacript test programs were created to capture frames and to detect faces at VG
 
 * TEAMS : Supportive, but [not supportive of adding facial expressions](https://www.w3.org/2021/11/24-webrtc-minutes.html#t04) and doubtful on the accuracy of emotion analysis.
 
-*Agreed, Facial expressions are not part of [Non-goals](https://github.com/riju/faceDetection/blob/main/explainer.md#non-goals) for this API*
+*Agreed, facial expressions are part of [Non-goals](https://github.com/riju/faceDetection/blob/main/explainer.md#non-goals) for this API*
 
 
 * MEET : Supportive, but many applications might not be using rectangle-bounding box, mask/contour more useful.
