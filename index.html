@@ -786,12 +786,12 @@ partial dictionary MediaTrackCapabilities {
           <dt><dfn><code>humanFaceDetectionMode</code></dfn> of type <span class="idlMemberType">sequence&lt;{{DOMString}}&gt;</span></dt>
           <dd>
             <p>The sequence of supported <a>face detection modes</a>.
-            Each string MUST be one of the members of {{ObjectDetectionMode}}. The mode {{ObjectDetectionMode/"center-point"}} must not be supported.</p>
+            Each string MUST be one of the members of {{HumanFaceDetectionMode}}.</p>
           </dd>
           <dt><dfn><code>humanFaceLandmarkDetectionMode</code></dfn> of type <span class="idlMemberType">sequence&lt;{{DOMString}}&gt;</span></dt>
           <dd>
             <p>The sequence of supported <a>face landmark detection modes</a>.
-            Each string MUST be one of the members of {{ObjectDetectionMode}}. The mode {{ObjectDetectionMode/"bounding-box"}} must not be supported.</p>
+            Each string MUST be one of the members of {{HumanFaceLandmarkDetectionMode}}.</p>
           </dd>
         </dl>
       </section>
@@ -808,12 +808,12 @@ partial dictionary MediaTrackConstraintSet {
         <dl class="dictionary-members" data-dfn-for="MediaTrackConstraintSet" data-link-for="MediaTrackConstraintSet">
           <dt><dfn><code>humanFaceDetectionMode</code></dfn> of type <span class="idlMemberType">{{ConstrainDOMString}}</span></dt>
           <dd>
-            <p>The string MUST be one of the members of {{ObjectDetectionMode}}.
+            <p>The string MUST be one of the members of {{HumanFaceDetectionMode}}.
             See <a>face detection mode</a> constrainable property.</p>
           </dd>
           <dt><dfn><code>humanFaceLandmarkDetectionMode</code></dfn> of type <span class="idlMemberType">{{ConstrainDOMString}}</span></dt>
           <dd>
-            <p>The string MUST be one of the members of {{ObjectDetectionMode}}.
+            <p>The string MUST be one of the members of {{HumanFaceLandmarkDetectionMode}}.
             See <a>face landmark detection mode</a> constrainable property.</p>
           </dd>
         </dl>
@@ -832,42 +832,58 @@ partial dictionary MediaTrackSettings {
           <dt><dfn><code>humanFaceDetectionMode</code></dfn> of type <span class="idlMemberType">{{DOMString}}</span></dt>
           <dd>
             <p>Current <a>face detection mode</a> setting.
-            The string MUST be one of the members of {{ObjectDetectionMode}} excluding {{ObjectDetectionMode/"center-point"}}.</p>
+            The string MUST be one of the members of {{HumanFaceDetectionMode}}.</p>
           </dd>
           <dt><dfn><code>humanFaceLandmarkDetectionMode</code></dfn> of type <span class="idlMemberType">{{DOMString}}</span></dt>
           <dd>
             <p>Current <a>face landmark detection mode</a> setting.
-            The string MUST be one of the members of {{ObjectDetectionMode}} excluding {{ObjectDetectionMode/"bounding-box"}}.</p>
+            The string MUST be one of the members of {{HumanFaceLandmarkDetectionMode}}.</p>
           </dd>
         </dl>
       </section>
     </section>
     <section>
-      <h3>{{ObjectDetectionMode}}</h3>
+      <h3>{{HumanFaceDetectionMode}}</h3>
 <pre class="idl">
-enum ObjectDetectionMode {
+enum HumanFaceDetectionMode {
   "none",
-  "center-point",
   "bounding-box",
 };</pre>
       <section class="notoc">
-        <h4>{{ObjectDetectionMode}} Enumeration Description</h4>
-        <dl data-dfn-for="ObjectDetectionMode" data-link-for="ObjectDetectionMode">
+        <h4>{{HumanFaceDetectionMode}} Enumeration Description</h4>
+        <dl data-dfn-for="HumanFaceDetectionMode" data-link-for="HumanFaceDetectionMode">
           <dt><dfn><code>none</code></dfn></dt>
           <dd>
-            <p>This source does not offer object detection for the corresponding object type.
+            <p>This source does not offer object detection for human faces.
             For setting, this is interpreted as a command to turn off
-            the setting of the corresponding object type detection metadata.</p>
-          </dd>
-          <dt><dfn><code>center-point</code></dfn></dt>
-          <dd>
-            <p>This source offers detection of the center point of the corresponding
-            object type, either a human face or a face landmark, or such a mode is requested.</p>
+            the setting of human face detection metadata.</p>
           </dd>
           <dt><dfn><code>bounding-box</code></dfn></dt>
           <dd>
-            <p>This source offers detection of the bounding box of the corresponding
-            object type, either a human face or a face landmark, or such a mode is requested.</p>
+            <p>This source offers detection of the bounding box of human faces or such a mode is requested.</p>
+          </dd>
+        </dl>
+      </section>
+    </section>
+    <section>
+      <h3>{{HumanFaceLandmarkDetectionMode}}</h3>
+<pre class="idl">
+enum HumanFaceLandmarkDetectionMode {
+  "none",
+  "center-point",
+};</pre>
+      <section class="notoc">
+        <h4>{{HumanFaceLandmarkDetectionMode}} Enumeration Description</h4>
+        <dl data-dfn-for="HumanFaceLandmarkDetectionMode" data-link-for="HumanFaceLandmarkDetectionMode">
+          <dt><dfn><code>none</code></dfn></dt>
+          <dd>
+            <p>This source does not offer object detection for human face landmarks.
+            For setting, this is interpreted as a command to turn off
+            the setting of human face landmark detection metadata.</p>
+          </dd>
+          <dt><dfn><code>center-point</code></dfn></dt>
+          <dd>
+            <p>This source offers detection of the center point of human face landmarks, or such a mode is requested.</p>
           </dd>
         </dl>
       </section>

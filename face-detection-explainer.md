@@ -92,10 +92,14 @@ partial dictionary MediaTrackSettings {
   DOMString humanFaceLandmarkDetectionMode;
 };
 
-enum ObjectDetectionMode {
+enum HumanFaceDetectionMode {
+  "none",          // Face or landmark detection is not needed
+  "bounding-box",  // Bounding box of the detected object is returned
+};
+
+enum HumanFaceLandmarkDetectionMode {
   "none",          // Face or landmark detection is not needed
   "center-point",  // Center point of the detected object is returned
-  "bounding-box",  // Bounding box of the detected object is returned
 };
 
 ```
@@ -123,9 +127,9 @@ coordinates (x,y) = (0.0, 0.0) represents the upper leftmost corner whereas the 
 
 New members are added to capabilities, constraints, and settings for Web applications to enable and control face and face landmark detection with `getUserMedia()` and `applyConstraints()` and to query capabilities of face detection with `getCapabilities()` methods. Web applications should not ask more facial metadata than what they need to limit computation. For example, if an applications is content with just a face bounding box, it should set the constraint `humanFaceLandmarkDetectionMode` to `"none"`.
 
-The enumeration constraints `humanFaceDetectionMode` and `humanFaceLandmarkDetectionMode` set the level of detection needed for human faces and their landmarks, respectively. These settings can be one of the enumeration values in `ObjectDetectionMode`. When `humanFaceDetectionMode` is `"bounding-box"`, user agent must attempt face detection and set the metadata in video frames correspondingly. When the setting is `"none"`, face description metadata (including landmarks) is not set. Similarly, when `humanFaceLandmarkDetectionMode` is `"none"`, the landmarks (ie. members `leftEye`, `rightEye`, and `mouth` in dictionary `HumanFace`) are not set. When the setting is `"center-point"` and face detection is enabled, the user agent must attempt to detect face landmarks and set the location information in the members of type `HumanFaceLandmark` accordingly. 
+The enumeration constraints `humanFaceDetectionMode` and `humanFaceLandmarkDetectionMode` set the level of detection needed for human faces and their landmarks, respectively. These settings can be one of the enumeration values in `HumanFaceDetectionMode` and `HumanFaceLandmarkDetectionMode`. When `humanFaceDetectionMode` is `"bounding-box"`, user agent must attempt face detection and set the metadata in video frames correspondingly. When the setting is `"none"`, face description metadata (including landmarks) is not set. Similarly, when `humanFaceLandmarkDetectionMode` is `"none"`, the landmarks (ie. members `leftEye`, `rightEye`, and `mouth` in dictionary `HumanFace`) are not set. When the setting is `"center-point"` and face detection is enabled, the user agent must attempt to detect face landmarks and set the location information in the members of type `HumanFaceLandmark` accordingly. 
 
-For now, `"center-point"` must not be supported for `humanFaceDetectionMode` and `"bounding-box"` must not be supported for `humanFaceLandmarkDetectionMode` due to limitations in current platform APIs. Furthermore, if face detection mode is `"none"`, also landmark detection setting must be the same `"none"` because without face detection results the landmark data can not be set either.
+If face detection mode is `"none"`, also landmark detection setting must be the same `"none"` because without face detection results the landmark data can not be set either.
 
 ## Platform Support 
 
