@@ -12,7 +12,7 @@
 ## Introduction
 
 This document describes a proposal to the WebRTC WG. At this stage, this proposal has not been accepted by the WG.
-Face detection is the process of detecting human faces in a given scene and distinguishing them from other objects. There are multiple ways to perform face detection on the Web. Libraries and machine learning (ML) frameworks (with WebAssembly and WebGL backend) exist, both proprietary and open source, which can perform  face detection either in client within the browser or using a vendor cloud service. Computation in vendor cloud adds latencies depending on network speed and adds dependency to third party service. 
+Face detection is the process of detecting the presence and location of human faces in a given image or video frame and distinguishing them from other objects. Face detection does not involve the recognition of faces ie. associating the detected faces to their owners. There are multiple ways to perform face detection on the Web. Libraries and machine learning (ML) frameworks (with WebAssembly and WebGL backend) exist, both proprietary and open source, which can perform  face detection either in client within the browser or using a vendor cloud service. Computation in vendor cloud adds latencies depending on network speed and adds dependency to third party service. 
 
 [Shape Detection API has a FaceDetector](https://wicg.github.io/shape-detection-api/) which enables Web applications to use a system provided face detector, but it requires image data to be provided by the Web app itself. It surely helps that it works on images to detect faces, but from a video conference perspective, it means the app would first need to capture frames from a camera and then feed them as input to the Shape Detection API. Many platforms offer a camera API which can perform face detection directly on image frames from the system camera. Cameras run a face detection algorithm by default to make their 3A algorithms work better. Both Windows and ChromeOS offer native platforms APIs to hook into those algorithms and offer performant face detection to the Web.
 
@@ -48,23 +48,29 @@ Face detection is the process of detecting human faces in a given scene and dist
 The API consists of two parts: first, metadata which describes the faces available in video frames. The metadata could be also set by user by creating a new video frame (modifying video frame metadata in existing frames is not allowed by the specification). The metadata could be used by WebCodecs encoders to improve video encoding quality, for example by allocating more bits to face areas in frames. As the encoding algorithms are not specified in standards, also the exact way how the facial metadata is used is not specified.
 
 ```js
+
 partial dictionary VideoFrameMetadata {
-  sequence<HumanFace> humanFaces;
+  sequence<Segment> segment;
 };
 
-dictionary HumanFace {
-  long              id;
-  float             probability;
-  DOMRectReadOnly   boundingBox;
-  HumanFaceLandmark leftEye;
-  HumanFaceLandmark rightEye;
-  HumanFaceLandmark mouth;
+dictionary Segment {
+  required SegmentType type;
+  required long        id;
+  required long        partOf;	    // References the parent segment id
+  required float       probability; // conditional probability estimate
+  Point2D              centerPoint;
+  DOMRectReadOnly      boundingBox;
+  // sequence<Point2D> contour;     // Possible future extension
 };
 
-dictionary HumanFaceLandmark {
-  Point2D           centerPoint;
+enum SegmentType {
+  "human-face",
+  "left-eye",       // oculus sinister 
+  "right-eye",      // oculus dexter
+  "eye",            // either eye
+  "mouth",
+  // More SegmentTypes may follow in future
 };
-
 ```
 
 ### Constraints
@@ -108,13 +114,15 @@ enum HumanFaceLandmarkDetectionMode {
 
 ### Metadata
 
-The first part of the API adds a new member `humanFaces` of type sequence of `HumanFace` into WebCodecs [`VideoFrameMetadata`](https://www.w3.org/TR/webcodecs/#dictdef-videoframemetadata) which provides information of the detected faces in the frame. In `HumanFace`, the member `id` is used to track faces between frames: the same `id` of a face between different frames indicates that it is the same face under tracking. However, it is specifically required that it must not be possible to correlate faces between different sources or video sequences by matching the `id` between them. If host uses face recognizion to track faces, it must assign a random integer to `id` between sequences to avoid privacy issues. `probability` is the probability that the returned face is in fact a human face and not a false detection.
+The first part of the API adds a new member `segment` of type sequence of `Segment` into WebCodecs [`VideoFrameMetadata`](https://www.w3.org/TR/webcodecs/#dictdef-videoframemetadata) which provides segmentation data for the frame. In dictionary `Segment`, the member `type` indicates the type of the enclosed object inside the segment. The member `id` is used to identify segments for two purposes. First, it is used to track segments between successive frames in a frame sequence (video): the same `id` of a segment between different frames indicates that it is the same object under tracking. However, it is specifically required that it must not be possible to correlate faces between different sources or video sequences by matching the `id` between them. If host uses face recognition to track objects, it must assign a random integer to `id` between sequences to avoid privacy issues.
 
-The member `boundingBox` provides the enclosing bounding box for the face.
+The second purpose of the `id` is to use it in conjunction of the `partOf` member. This member is used to reference another segmented object in the same `VideoFrame` of which the current object is part of. Thus, the integer value of the member `partOf` of a segment corresponding to a human eye would be set to the same value as the member `id` of another segment which corresponds to the human face where the eye is located.
 
-The members `leftEye`, `rightEye`, and `mouth` provide information on facial features belonging to the detected face. Currently this includes the center point for eyes and mouth, but we define a separate dictionary `HumanFaceLandmark` to allow extending it easily later on. 
+The member `probability` is the estimate of the conditional probability that the segmented object is of the type indicated by the `type` member, between zero and one, given the segmentation and confidence output from the face detection model. This could also incorporate a priori factors known by the user agent such as quality of the system camera or known bias in the model. Mathematically, `probability` would be the number of correct detections and segmentations of an object among the set of all possible inputs which lead to the given segmentation and model confidence. In practice this is incalculable and therefore we only require an estimate of this probability. User agent can also omit the probability by setting the value to zero.
 
-The coordinates in the members `boundingBox` and `centerPoint` of the detected faces and landmarks are defined similarly as in the
+The members `centerPoint` and `boundingBox` provide the geometrical segmentation information. The first one indicates an estimate of the center of the object and the latter the estimate of the tight enclosing bounding box of the object.
+
+The coordinates in the members `centerPoint` and `boundingBox` are defined similarly as in the
 [`pointsOfInterest`](https://w3c.github.io/mediacapture-image/#points-of-interest)
 member in [`MediaTrackSettings`](https://w3c.github.io/mediacapture-image/#dom-mediatracksettings-pointsofinterest)
 with the exception that the coordinates may also lie outside of the frame since a detected face could be
@@ -125,11 +133,11 @@ coordinates (x,y) = (0.0, 0.0) represents the upper leftmost corner whereas the 
 
 ### Constraints
 
-New members are added to capabilities, constraints, and settings for Web applications to enable and control face and face landmark detection with `getUserMedia()` and `applyConstraints()` and to query capabilities of face detection with `getCapabilities()` methods. Web applications should not ask more facial metadata than what they need to limit computation. For example, if an applications is content with just a face bounding box, it should set the constraint `humanFaceLandmarkDetectionMode` to `"none"`.
+New members are added to capabilities, constraints, and settings for Web applications to enable detection and automatic generation of face and face landmark metadata. These are used in conjunction with `getUserMedia()`, `applyConstraints()`, and `getCapabilities()`. Web applications should not ask more facial metadata than what they need to limit computation. For example, if an application is content with just a face bounding box, it should set the constraint `humanFaceLandmarkDetectionMode` to `"none"`.
 
-The enumeration constraints `humanFaceDetectionMode` and `humanFaceLandmarkDetectionMode` set the level of detection needed for human faces and their landmarks, respectively. These settings can be one of the enumeration values in `HumanFaceDetectionMode` and `HumanFaceLandmarkDetectionMode`. When `humanFaceDetectionMode` is `"bounding-box"`, user agent must attempt face detection and set the metadata in video frames correspondingly. When the setting is `"none"`, face description metadata (including landmarks) is not set. Similarly, when `humanFaceLandmarkDetectionMode` is `"none"`, the landmarks (ie. members `leftEye`, `rightEye`, and `mouth` in dictionary `HumanFace`) are not set. When the setting is `"center-point"` and face detection is enabled, the user agent must attempt to detect face landmarks and set the location information in the members of type `HumanFaceLandmark` accordingly. 
+The constraints `humanFaceDetectionMode` and `humanFaceLandmarkDetectionMode` request the detail level of detection that the application wants for human faces and their landmarks, respectively. These settings can be one of the enumeration values in `HumanFaceDetectionMode` and `HumanFaceLandmarkDetectionMode`. When `humanFaceDetectionMode` is `"bounding-box"`, the user agent must attempt face detection and setting the metadata in video frames correspondingly. When the setting is `"none"`, face segmentation metadata (including landmarks) is not set by the user agent. Similarly, when `humanFaceLandmarkDetectionMode` is `"none"`, no metadata related to the landmarks is set (ie. segmentation information for types  `left-eye`, `right-eye`, `eye`, and `mouth`). When the setting is `"center-point"` the user agent must attempt to detect face landmarks and set the segmentation metadata accordingly. 
 
-If face detection mode is `"none"`, also landmark detection setting must be the same `"none"` because without face detection results the landmark data can not be set either.
+In most implementations, if face detection mode is `"none"`, the user agent would also disable human face landmark detection by setting `humanFaceLandmarkDetectionMode` to be the same `"none"` because typically face landmarks can not be detected without first face detection.
 
 ## Platform Support 
 
@@ -186,14 +194,6 @@ Currently common platforms such as ChromeOS, Android, and Windows support system
 
 ```js
 // main.js:
-// Check if face detection is supported by the browser
-const supports = navigator.mediaDevices.getSupportedConstraints();
-if (supports.humanFaceDetectionMode) {
-  // Browser supports face detection.
-} else {
-  throw('Face detection is not supported');
-}
-
 // Open camera with face detection enabled
 const stream = await navigator.mediaDevices.getUserMedia({
   video: { humanFaceDetectionMode: 'bounding-box' }
@@ -201,10 +201,13 @@ const stream = await navigator.mediaDevices.getUserMedia({
 const [videoTrack] = stream.getVideoTracks();
 
 // Use a video worker and show to user.
+const videoSettings = videoTrack.getSettings();
+if (!videoSettings.humanFaceDetectionMode) {
+  throw('Face detection is not supported');
+}
 const videoElement = document.querySelector("video");
 const videoGenerator = new MediaStreamTrackGenerator({kind: 'video'});
 const videoProcessor = new MediaStreamTrackProcessor({track: videoTrack});
-const videoSettings = videoTrack.getSettings();
 const videoWorker = new Worker('video-worker.js');
 videoWorker.postMessage({
   videoReadable: videoProcessor.readable,
@@ -217,11 +220,13 @@ videoElement.onloadedmetadata = event => videoElement.play();
 self.onmessage = async function(e) {
   const videoTransformer = new TransformStream({
     async transform(videoFrame, controller) {
-      for (const face of videoFrame.metadata().humanFaces || []) {
-        console.log(`Face @ (${face.boundingBox.left},` +
-                            `${face.boundingBox.top},` +
-                            `${face.boundingBox.right},` +
-                            `${face.boundingBox.bottom})`);
+      for (const segment of videoFrame.metadata().segment || []) {
+        if (segment.type === 'human-face' && segment.boundingBox) {
+          console.log(`Face @ (${segment.boundingBox.left},` +
+                              `${segment.boundingBox.top},` +
+                              `${segment.boundingBox.right},` +
+                              `${segment.boundingBox.bottom})`);
+        }
       }
       controller.enqueue(videoFrame);
     }

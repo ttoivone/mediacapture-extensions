@@ -655,99 +655,123 @@ partial interface MediaStreamTrack {
     </div>
   </section>
   <section>
-    <h2>Human faces</h2>
-    <p>Human face metadata describes the human faces in video frames. It can
+    <h2>Human face segmentation</h2>
+    <p>Human face metadata describes the geometrical information of human faces in video frames. It can
     be set by web applications using the standard means when creating
-    {{VideoFrameMetadata}} for {{VideoFrame}}s or it can be set by an user agent
+    {{VideoFrameMetadata}} for {{VideoFrame}}s or it can be set by a user agent
     when the media track constraints, defined below, are used to
-    enable face detection for the {{MediaStreamTrack}} which provides the
+    enable face or face landmark detection for the {{MediaStreamTrack}} which provides the
     {{VideoFrame}}s.</p>
-    <p>The facial metadata may be used by video encoders to enhance the quality
+    <p>The facial metadata can be used by video encoders to enhance the quality
     of the faces in encoded video streams or for other suitable purposes.</p>
     <section>
       <h3>{{VideoFrameMetadata}}</h3>
       <pre class="idl">
 partial dictionary VideoFrameMetadata {
-  sequence&lt;HumanFace&gt; humanFaces;
+  sequence&lt;Segment&gt; segment;
 };</pre>
       <section class="notoc">
         <h4>Members</h4>
         <dl class="dictionary-members" data-link-for="VideoFrameMetadata" data-dfn-for="VideoFrameMetadata">
-          <dt><dfn><code>humanFaces</code></dfn> of type <span class="idlMemberType"><code>sequence&lt;{{HumanFace}}&gt;</code></span></dt>
+          <dt><dfn><code>segment</code></dfn> of type <span class="idlMemberType"><code>sequence&lt;{{Segment}}&gt;</code></span></dt>
           <dd>
-            <p>The set of known human faces in this video frame.</p>
+            <p>The set of known geometrical segments in this video frame.</p>
           </dd>
         </dl>
       </section>
     </section>
     <section>
-      <h3>{{HumanFace}}</h3>
+      <h3>{{Segment}}</h3>
       <pre class="idl">
-dictionary HumanFace {
-  long              id;
-  float             probability;
-  DOMRectReadOnly   boundingBox;
-  HumanFaceLandmark leftEye;
-  HumanFaceLandmark rightEye;
-  HumanFaceLandmark mouth;
+dictionary Segment {
+  required SegmentType type;
+  required long        id;
+  required long        partOf;
+  required float       probability;
+  Point2D              centerPoint;
+  DOMRectReadOnly      boundingBox;
+};</pre>
+<pre class="idl">
+enum SegmentType {
+  "human-face",
+  "left-eye",
+  "right-eye",
+  "eye",
+  "mouth",
 };</pre>
       <section class="notoc">
-        <h4>Dictionary {{HumanFace}} Members</h4>
-        <dl class="dictionary-members" data-dfn-for="HumanFace" data-link-for="HumanFace">
+        <h4>Dictionary {{Segment}} Members</h4>
+        <dl class="dictionary-members" data-dfn-for="Segment" data-link-for="HumanFace">
+          <dt><dfn><code>type</code></dfn> of type <span class="idlMemberType"><code>{{SegmentType}}</code></span></dt>
+          <dd>
+            <p>The type of object which the segment refers to.</p>
+	    <p>It must be one of the following values:</p>
+            <dl data-dfn-for="SegmentType" data-link-for="SegmentType">
+              <dt><dfn><code>human-face</code></dfn></dt>
+              <dd>
+        	<p>The segment describes a human face.</p>
+              </dd>
+              <dt><dfn><code>left-eye</code></dfn></dt>
+              <dd>
+        	<p>The segment describes <i>oculus sinister</i>.</p>
+              </dd>
+              <dt><dfn><code>right-eye</code></dfn></dt>
+              <dd>
+        	<p>The segment describes <i>oculus dexter</i>.</p>
+              </dd>
+              <dt><dfn><code>eye</code></dfn></dt>
+              <dd>
+        	<p>The segment describes an eye, either left or right.</p>
+              </dd>
+              <dt><dfn><code>mouth</code></dfn></dt>
+              <dd>
+        	<p>The segment describes a mouth.</p>
+              </dd>
+            </dl>
+          </dd>
           <dt><dfn><code>id</code></dfn> of type <span class="idlMemberType">{{long}}</span></dt>
           <dd>
-            <p>If set, an unique identifer of a face within a sequence. If the same face can be tracked in multiple
-            frames originating from the same {{MediaStreamTrack}} source, {{id}} is set to the same integer value
-            for the face in all frames.</p>
-            <p>User agent MUST NOT select the assigned value of {{id}} in such a way that the detected faces could
-            be correlated to match in any way between different {{MediaStreamTrack}} objects.</p>
+            <p>A unique identifier of the segment within a sequence. If the same object can be tracked over multiple
+            frames originating from the same {{MediaStreamTrack}} source, {{Segment/id}} is the same integer value
+            for the object in all frames. {{Segment/id}} is also used in conjunction with the member {{Segment/partOf}}.</p>
+            <p>User agent MUST NOT assign the value for {{Segment/id}} in such a way that the detected object could
+            be correlated to match between different {{MediaStreamTrack}} objects.</p>
+          </dd>
+          <dt><dfn><code>partOf</code></dfn> of type <span class="idlMemberType">{{long}}</span></dt>
+          <dd>
+            <p>If nonzero, references another segment which has the member {{Segment/id}} set to the same value.
+            The referenced segment corresponds to an object of which the object described by this segment
+	    is part of.</p>
+	    <p>If zero, the object described by this segment is not known to be part of any other object
+	    described by any segment associated with the {{MediaStreamTrack}}.</p>
           </dd>
           <dt><dfn><code>probability</code></dfn> of type <span class="idlMemberType">{{float}}</span></dt>
           <dd>
-            <p>If set, a probability value in range (0,1].
-            The approximate probability of the {{HumanFace}} specifying an actual human face.</p>
+            <p>If nonzero, this is the estimate of the conditional probability that the segmented object
+            actually is of the type indicated by the {{Segment/type}} member on the condition that
+            the detection has been made. The value of this member must be
+            always in the range [0,1]. The special value of zero indicates that the actual probability
+            is not known.</p>
           </dd>
-          <dt><dfn><code>boundingBox</code></dfn> of type <span class="idlMemberType"><code>{{DOMRectReadOnly}}</code></span></dt>
-          <dd>
-            <p>A bounding box surrounding the face. The corner coordinates of the
+          <dt><dfn><code>centerPoint</code></dfn> of type <span class="idlMemberType">{{Point2D}}</span></dt>
+          <dd><p>The coordinates of the approximate center of the object described by this {{Segment}}.
+            The object location in the frame may be specified even if it is obscured by other objects in
+	    front of it or it lies partially or fully outside of the frame.</p>
+	    <p>The corner coordinates of the
             bounding box are interpreted to represent a coordinate in a
             normalized square space. The origin of coordinates {x,y} =
             {0.0, 0.0} represents the upper left corner whereas the {x,y} =
             {1.0, 1.0} represents the lower right corner relative to the
             rendered frame.</p>
-            <p>The face location in the frame may be specified even if it is
+          </dd>
+          <dt><dfn><code>boundingBox</code></dfn> of type <span class="idlMemberType"><code>{{DOMRectReadOnly}}</code></span></dt>
+          <dd>
+            <p>A bounding box surrounding the object described by this segment. </p>
+            <p>The object bounding box in the frame may be specified even if it is
             obscured by other objects in front of it or it lies partially or
             fully outside of the frame.</p>
-          </dd>
-          <dt><dfn><code>leftEye</code></dfn> of type <span class="idlMemberType"><code>{{HumanFaceLandmark}}</code></span></dt>
-          <dd>
-            <p>If exists, describes the face left eye properties.</p>
-          </dd>
-          <dt><dfn><code>rightEye</code></dfn> of type <span class="idlMemberType"><code>{{HumanFaceLandmark}}</code></span></dt>
-          <dd>
-            <p>If exists, describes the face right eye properties.</p>
-          </dd>
-          <dt><dfn><code>mouth</code></dfn> of type <span class="idlMemberType"><code>{{HumanFaceLandmark}}</code></span></dt>
-          <dd>
-            <p>If exists, describes the face mouth properties.</p>
-          </dd>
-        </dl>
-      </section>
-    </section>
-    <section>
-      <h3>{{HumanFaceLandmark}}</h3>
-<pre class="idl">dictionary HumanFaceLandmark {
-  Point2D centerPoint;
-};</pre>
-      <section class="notoc">
-        <h4>Dictionary {{HumanFaceLandmark}} Members</h4>
-        <dl class="dictionary-members" data-dfn-for="HumanFaceLandmark" data-link-for="HumanFaceLandmark">
-          <dt><dfn><code>centerPoint</code></dfn> of type <span class="idlMemberType">{{Point2D}}</span></dt>
-          <dd><p>The coordinates of the approximate center of the detected landmark.
-            The landmark location in the frame may be specified even if it is
-            obscured by other objects in front of it or it lies partially or
-            fully outside of the frame. See member {{HumanFace/boundingBox}} for definition
-            of the coordinate system.</p>
+	    <p>See member {{Segment/centerPoint}} for definition of the coordinate system.
+	    </p>
           </dd>
         </dl>
       </section>
@@ -786,12 +810,12 @@ partial dictionary MediaTrackCapabilities {
           <dt><dfn><code>humanFaceDetectionMode</code></dfn> of type <span class="idlMemberType">sequence&lt;{{DOMString}}&gt;</span></dt>
           <dd>
             <p>The sequence of supported <a>face detection modes</a>.
-            Each string MUST be one of the members of {{HumanFaceDetectionMode}}.</p>
+            Each string MUST be one of the members of {{HumanFaceDetectionModeEnum}}.</p>
           </dd>
           <dt><dfn><code>humanFaceLandmarkDetectionMode</code></dfn> of type <span class="idlMemberType">sequence&lt;{{DOMString}}&gt;</span></dt>
           <dd>
             <p>The sequence of supported <a>face landmark detection modes</a>.
-            Each string MUST be one of the members of {{HumanFaceLandmarkDetectionMode}}.</p>
+            Each string MUST be one of the members of {{HumanFaceLandmarkDetectionModeEnum}}.</p>
           </dd>
         </dl>
       </section>
@@ -808,12 +832,12 @@ partial dictionary MediaTrackConstraintSet {
         <dl class="dictionary-members" data-dfn-for="MediaTrackConstraintSet" data-link-for="MediaTrackConstraintSet">
           <dt><dfn><code>humanFaceDetectionMode</code></dfn> of type <span class="idlMemberType">{{ConstrainDOMString}}</span></dt>
           <dd>
-            <p>The string MUST be one of the members of {{HumanFaceDetectionMode}}.
+            <p>The string MUST be one of the members of {{HumanFaceDetectionModeEnum}}.
             See <a>face detection mode</a> constrainable property.</p>
           </dd>
           <dt><dfn><code>humanFaceLandmarkDetectionMode</code></dfn> of type <span class="idlMemberType">{{ConstrainDOMString}}</span></dt>
           <dd>
-            <p>The string MUST be one of the members of {{HumanFaceLandmarkDetectionMode}}.
+            <p>The string MUST be one of the members of {{HumanFaceLandmarkDetectionModeEnum}}.
             See <a>face landmark detection mode</a> constrainable property.</p>
           </dd>
         </dl>
@@ -832,26 +856,26 @@ partial dictionary MediaTrackSettings {
           <dt><dfn><code>humanFaceDetectionMode</code></dfn> of type <span class="idlMemberType">{{DOMString}}</span></dt>
           <dd>
             <p>Current <a>face detection mode</a> setting.
-            The string MUST be one of the members of {{HumanFaceDetectionMode}}.</p>
+            The string MUST be one of the members of {{HumanFaceDetectionModeEnum}}.</p>
           </dd>
           <dt><dfn><code>humanFaceLandmarkDetectionMode</code></dfn> of type <span class="idlMemberType">{{DOMString}}</span></dt>
           <dd>
             <p>Current <a>face landmark detection mode</a> setting.
-            The string MUST be one of the members of {{HumanFaceLandmarkDetectionMode}}.</p>
+            The string MUST be one of the members of {{HumanFaceLandmarkDetectionModeEnum}}.</p>
           </dd>
         </dl>
       </section>
     </section>
     <section>
-      <h3>{{HumanFaceDetectionMode}}</h3>
+      <h3>{{HumanFaceDetectionModeEnum}}</h3>
 <pre class="idl">
-enum HumanFaceDetectionMode {
+enum HumanFaceDetectionModeEnum {
   "none",
   "bounding-box",
 };</pre>
       <section class="notoc">
-        <h4>{{HumanFaceDetectionMode}} Enumeration Description</h4>
-        <dl data-dfn-for="HumanFaceDetectionMode" data-link-for="HumanFaceDetectionMode">
+        <h4>{{HumanFaceDetectionModeEnum}} Enumeration Description</h4>
+        <dl data-dfn-for="HumanFaceDetectionModeEnum" data-link-for="HumanFaceDetectionModeEnum">
           <dt><dfn><code>none</code></dfn></dt>
           <dd>
             <p>This source does not offer object detection for human faces.
@@ -866,15 +890,15 @@ enum HumanFaceDetectionMode {
       </section>
     </section>
     <section>
-      <h3>{{HumanFaceLandmarkDetectionMode}}</h3>
+      <h3>{{HumanFaceLandmarkDetectionModeEnum}}</h3>
 <pre class="idl">
-enum HumanFaceLandmarkDetectionMode {
+enum HumanFaceLandmarkDetectionModeEnum {
   "none",
   "center-point",
 };</pre>
       <section class="notoc">
-        <h4>{{HumanFaceLandmarkDetectionMode}} Enumeration Description</h4>
-        <dl data-dfn-for="HumanFaceLandmarkDetectionMode" data-link-for="HumanFaceLandmarkDetectionMode">
+        <h4>{{HumanFaceLandmarkDetectionModeEnum}} Enumeration Description</h4>
+        <dl data-dfn-for="HumanFaceLandmarkDetectionModeEnum" data-link-for="HumanFaceLandmarkDetectionModeEnum">
           <dt><dfn><code>none</code></dfn></dt>
           <dd>
             <p>This source does not offer object detection for human face landmarks.
@@ -905,14 +929,6 @@ enum HumanFaceLandmarkDetectionMode {
       <h3>Examples</h3>
       <pre class="example">
 // main.js:
-// Check if face detection is supported by the browser
-const supports = navigator.mediaDevices.getSupportedConstraints();
-if (supports.humanFaceDetectionMode) {
-  // Browser supports face contour detection.
-} else {
-  throw('Face contour detection is not supported');
-}
-
 // Open camera with face detection enabled
 const stream = await navigator.mediaDevices.getUserMedia({
   video: { humanFaceDetectionMode: 'bounding-box' }
@@ -933,113 +949,12 @@ self.onmessage = async ({data: {track}}) => {
   const {readable} = new MediaStreamTrackProcessor({track});
   const transformer = new TransformStream({
     async transform(frame, controller) {
-      for (const face of frame.metadata().humanFaces || []) {
-        if (face.boundingBox) {
+      for (const segment of frame.metadata().segment || []) {
+        if (segment.type === 'human-face' && segment.boundingBox) {
           console.log(
-            `Face @ (${face.boundingBox.left}, ${face.face.boundingBox.top}), ` +
-                   `(${face.boundingBox.right}, ${face.face.boundingBox.bottom})`);
+            `Face @ (${segment.boundingBox.left}, ${segment.boundingBox.top}), ` +
+                   `(${segment.boundingBox.right}, ${segment.boundingBox.bottom})`);
         }
-      }
-      controller.enqueue(frame);
-    }
-  });
-  await readable.pipeThrough(transformer).pipeTo(generator.writable);
-};
-      </pre>
-      <pre class="example">
-// main.js:
-// Open camera.
-const stream = navigator.mediaDevices.getUserMedia({video: true});
-const [videoTrack] = stream.getVideoTracks();
-
-// Use a video worker and show to user.
-const videoElement = document.querySelector('video');
-const videoWorker = new Worker('video-worker.js');
-videoWorker.postMessage({track: videoTrack}, [videoTrack]);
-const {data} = await new Promise(r => videoWorker.onmessage);
-videoElement.srcObject = new MediaStream([data.videoTrack]);
-
-// video-worker.js:
-self.onmessage = async ({data: {track}}) => {
-  // Apply constraints.
-  let customBackgroundBlur = true;
-  let customEyeGazeCorrection = true;
-  let customFaceDetection = false;
-  let faceDetectionMode;
-  let landmarkDetectionMode;
-  const capabilities = track.getCapabilities();
-  if (capabilities.backgroundBlur &amp;&amp; capabilities.backgroundBlur.max &gt; 0) {
-    // The platform supports background blurring.
-    // Let's use platform background blurring and skip the custom one.
-    await track.applyConstraints({
-      advanced: [{backgroundBlur: capabilities.backgroundBlur.max}]
-    });
-    customBackgroundBlur = false;
-  } else if ((capabilities.humanFaceDetectionMode || []).includes('bounding-box')) {
-    // The platform supports face bounding box detection but not background
-    // blurring. Let's use platform face detection to aid custom
-    // background blurring.
-    faceDetectionMode = 'bounding-box';
-    await videoTrack.applyConstraints({
-      advanced: [{ humanFaceDetectionMode: faceDetectionMode }]
-    });
-  } else {
-    // The platform does not support background blurring nor face contour
-    // detection. Let's use custom face contour detection to aid custom
-    // background blurring.
-    customFaceDetection = true;
-  }
-  if ((capabilities.eyeGazeCorrection || []).includes(true)) {
-    // The platform supports eye gaze correction.
-    // Let's use platform eye gaze correction and skip the custom one.
-    await videoTrack.applyConstraints({
-      advanced: [{eyeGazeCorrection: true}]
-    });
-    customEyeGazeCorrection = false;
-  } else if ((capabilities.humanFaceLandmarkDetectionMode || []).includes('center-point')) {
-    // The platform supports face landmark detection but not eye gaze
-    // correction. Let's use platform face landmark detection to aid custom eye
-    // gaze correction.
-    landmarkDetectionMode = 'center-point';
-    await videoTrack.applyConstraints({
-      advanced: [{ humanFaceLandmarkDetectionMode: landmarkDetectionMode }]
-    });
-  } else {
-    // The platform does not support eye gaze correction nor face landmark
-    // detection. Let's use custom face landmark detection to aid custom eye
-    // gaze correction.
-    customFaceDetection = true;
-  }
-
-  // Load custom libraries which may utilize TensorFlow and/or WASM.
-  const requiredScripts = [].concat(
-    customBackgroundBlur    ? 'background.js' : [],
-    customEyeGazeCorrection ? 'eye-gaze.js'   : [],
-    customFaceDetection     ? 'face.js'       : []
-  );
-  importScripts(...requiredScripts);
-
-  const generator = new VideoTrackGenerator();
-  parent.postMessage({videoTrack: generator.track}, [generator.track]);
-  const {readable} = new MediaStreamTrackProcessor({track});
-  const transformer = new TransformStream({
-    async transform(frame, controller) {
-      // Detect faces or retrieve detected faces.
-      const humanFaces =
-        customFaceDetection
-          ? await detectFaces(frame)
-          : frame.metadata().humanFaces;
-      // Blur the background if needed.
-      if (customBackgroundBlur) {
-        const newFrame = await blurBackground(frame, humanFaces);
-        frame.close();
-        frame = newFrame;
-      }
-      // Correct the eye gaze if needed.
-      if (customEyeGazeCorrection &amp;&amp; (humanFaces || []).length &gt; 0) {
-        const newFrame = await correctEyeGaze(frame, humanFaces);
-        frame.close();
-        frame = newFrame;
       }
       controller.enqueue(frame);
     }
