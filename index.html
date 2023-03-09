@@ -673,9 +673,9 @@ partial dictionary VideoFrameMetadata {
       <section class="notoc">
         <h4>Members</h4>
         <dl class="dictionary-members" data-link-for="VideoFrameMetadata" data-dfn-for="VideoFrameMetadata">
-          <dt><dfn><code>segment</code></dfn> of type <span class="idlMemberType"><code>sequence&lt;{{Segment}}&gt;</code></span></dt>
+          <dt><dfn><code>segment</code></dfn> of type <code>sequence&lt;{{Segment}}&gt;</code></dt>
           <dd>
-            <p>The set of known geometrical segments in this video frame.</p>
+            <p>The set of known geometrical segments in the video frame.</p>
           </dd>
         </dl>
       </section>
@@ -702,82 +702,81 @@ enum SegmentType {
       <section class="notoc">
         <h4>Dictionary {{Segment}} Members</h4>
         <dl class="dictionary-members" data-dfn-for="Segment" data-link-for="HumanFace">
-          <dt><dfn><code>type</code></dfn> of type <span class="idlMemberType"><code>{{SegmentType}}</code></span></dt>
+          <dt><dfn><code>type</code></dfn> of type <code>{{SegmentType}}</code></dt>
           <dd>
-            <p>The type of object which the segment refers to.</p>
-	    <p>It must be one of the following values:</p>
+            <p>The type of segment which the segment refers to.</p>
+            <p>It must be one of the following values:</p>
             <dl data-dfn-for="SegmentType" data-link-for="SegmentType">
               <dt><dfn><code>human-face</code></dfn></dt>
               <dd>
-        	<p>The segment describes a human face.</p>
+                <p>The segment describes a human face.</p>
               </dd>
               <dt><dfn><code>left-eye</code></dfn></dt>
               <dd>
-        	<p>The segment describes <i>oculus sinister</i>.</p>
+                <p>The segment describes <i>oculus sinister</i>.</p>
               </dd>
               <dt><dfn><code>right-eye</code></dfn></dt>
               <dd>
-        	<p>The segment describes <i>oculus dexter</i>.</p>
+                <p>The segment describes <i>oculus dexter</i>.</p>
               </dd>
               <dt><dfn><code>eye</code></dfn></dt>
               <dd>
-        	<p>The segment describes an eye, either left or right.</p>
+                <p>The segment describes an eye, either left or right.</p>
               </dd>
               <dt><dfn><code>mouth</code></dfn></dt>
               <dd>
-        	<p>The segment describes a mouth.</p>
+                <p>The segment describes a mouth.</p>
               </dd>
             </dl>
           </dd>
-          <dt><dfn><code>id</code></dfn> of type <span class="idlMemberType">{{long}}</span></dt>
+          <dt><dfn><code>id</code></dfn> of type {{long}}</dt>
           <dd>
-            <p>A unique identifier of the segment within a sequence. If the same object can be tracked over multiple
-            frames originating from the same {{MediaStreamTrack}} source, {{Segment/id}} is the same integer value
-            for the object in all frames. {{Segment/id}} is also used in conjunction with the member {{Segment/partOf}}.</p>
-            <p>User agent MUST NOT assign the value for {{Segment/id}} in such a way that the detected object could
-            be correlated to match between different {{MediaStreamTrack}} objects.</p>
+            <p>An identifier of the segment, unique within a sequence. If the same segment can be tracked over multiple
+            frames originating from the same {{MediaStreamTrack}} source, the user agent SHOULD use the same {{Segment/id}}
+            for the segment in all frames. {{Segment/id}} is also used in conjunction with the member {{Segment/partOf}}.</p>
+            <p>The user agent MUST NOT select the value to assign to {{Segment/id}} in such a way that the detected segments
+            could be correlated to match between different {{MediaStreamTrack}} sources.</p>
           </dd>
-          <dt><dfn><code>partOf</code></dfn> of type <span class="idlMemberType">{{long}}</span></dt>
+          <dt><dfn><code>partOf</code></dfn> of type {{long}}</dt>
           <dd>
             <p>If nonzero, references another segment which has the member {{Segment/id}} set to the same value.
             The referenced segment corresponds to an object of which the object described by this segment
-	    is part of.</p>
-	    <p>If zero, the object described by this segment is not known to be part of any other object
-	    described by any segment associated with the {{MediaStreamTrack}}.</p>
+            is part of.</p>
+            <p>If zero, the object described by this segment is not known to be part of any other object
+            described by any segment associated with the {{MediaStreamTrack}}.</p>
           </dd>
-          <dt><dfn><code>probability</code></dfn> of type <span class="idlMemberType">{{float}}</span></dt>
+          <dt><dfn><code>probability</code></dfn> of type {{float}}</dt>
           <dd>
             <p>If nonzero, this is the estimate of the conditional probability that the segmented object
             actually is of the type indicated by the {{Segment/type}} member on the condition that
-            the detection has been made. The value of this member must be
-            always in the range [0,1]. The special value of zero indicates that the actual probability
-            is not known.</p>
+            the detection has been made. The value of this member must be always zero or above with a
+            maximum of one. The special value of zero indicates that the probability estimate
+            is not available.</p>
           </dd>
-          <dt><dfn><code>centerPoint</code></dfn> of type <span class="idlMemberType">{{Point2D}}</span></dt>
+          <dt><dfn><code>centerPoint</code></dfn> of type {{Point2D}}</dt>
           <dd><p>The coordinates of the approximate center of the object described by this {{Segment}}.
-            The object location in the frame may be specified even if it is obscured by other objects in
-	    front of it or it lies partially or fully outside of the frame.</p>
-	    <p>The corner coordinates of the
-            bounding box are interpreted to represent a coordinate in a
+            The object location in the frame can be specified even if it is obscured by other objects in
+            front of it or it lies partially or fully outside of the frame.</p>
+            <p>The {{Point2D/x}} and {{Point2D/y}} values of the point are interpreted to represent a coordinate in a
             normalized square space. The origin of coordinates {x,y} =
             {0.0, 0.0} represents the upper left corner whereas the {x,y} =
             {1.0, 1.0} represents the lower right corner relative to the
             rendered frame.</p>
           </dd>
-          <dt><dfn><code>boundingBox</code></dfn> of type <span class="idlMemberType"><code>{{DOMRectReadOnly}}</code></span></dt>
+          <dt><dfn><code>boundingBox</code></dfn> of type <code>{{DOMRectReadOnly}}</code></dt>
           <dd>
             <p>A bounding box surrounding the object described by this segment. </p>
-            <p>The object bounding box in the frame may be specified even if it is
+            <p>The object bounding box in the frame can be specified even if it is
             obscured by other objects in front of it or it lies partially or
             fully outside of the frame.</p>
-	    <p>See member {{Segment/centerPoint}} for definition of the coordinate system.
-	    </p>
+            <p>See member {{Segment/centerPoint}} for definition of the coordinate system.
+            </p>
           </dd>
         </dl>
       </section>
     </section>
     <section>
-      <h3>{{MediaTrackSupportedConstraints}}</h3>
+      <h3>{{MediaTrackSupportedConstraints}} dictionary extensions</h3>
 <pre class="idl">
 partial dictionary MediaTrackSupportedConstraints {
   boolean humanFaceDetectionMode = true;
@@ -786,19 +785,19 @@ partial dictionary MediaTrackSupportedConstraints {
       <section class="notoc">
         <h4>Dictionary {{MediaTrackSupportedConstraints}} Members</h4>
         <dl class="dictionary-members" data-dfn-for="MediaTrackSupportedConstraints" data-link-for="MediaTrackSupportedConstraints">
-          <dt><dfn><code>humanFaceDetectionMode</code></dfn> of type <span class="idlMemberType">{{boolean}}</span>, defaulting to <code>true</code></dt>
-          <dd>
-            <p>Whether <a>face detection mode</a> constraining is recognized.</p>
-          </dd>
-          <dt><dfn><code>humanFaceLandmarkDetectionMode</code></dfn> of type <span class="idlMemberType">{{boolean}}</span>, defaulting to <code>true</code></dt>
-          <dd>
-            <p>Whether <a>face landmark detection mode</a> constraining is recognized.</p>
-          </dd>
+          <dt><dfn>humanFaceDetectionMode</dfn> of type {{boolean}}, defaulting to <code>true</code></dt>
+            <dd>See <a href=
+            "#def-constraint-humanFaceDetectionMode">
+            humanFaceDetectionMode</a> for details.</dd>
+          <dt><dfn>humanFaceLandmarkDetectionMode</dfn> of type {{boolean}}, defaulting to <code>true</code></dt>
+            <dd>See <a href=
+            "#def-constraint-humanFaceLandmarkDetectionMode">
+            humanFaceLandmarkDetectionMode</a> for details.</dd>
         </dl>
       </section>
     </section>
     <section>
-      <h3>{{MediaTrackCapabilities}}</h3>
+      <h3>{{MediaTrackCapabilities}} dictionary extensions</h3>
       <pre class="idl">
 partial dictionary MediaTrackCapabilities {
   sequence&lt;DOMString&gt; humanFaceDetectionMode;
@@ -807,21 +806,25 @@ partial dictionary MediaTrackCapabilities {
       <section class="notoc">
         <h4>Dictionary {{MediaTrackCapabilities}} Members</h4>
         <dl class="dictionary-members" data-dfn-for="MediaTrackCapabilities" data-link-for="MediaTrackCapabilities">
-          <dt><dfn><code>humanFaceDetectionMode</code></dfn> of type <span class="idlMemberType">sequence&lt;{{DOMString}}&gt;</span></dt>
+          <dt><dfn>humanFaceDetectionMode</dfn> of type <code>sequence&lt;{{DOMString}}&gt;</code></dt>
           <dd>
-            <p>The sequence of supported <a>face detection modes</a>.
-            Each string MUST be one of the members of {{HumanFaceDetectionModeEnum}}.</p>
+            <p>The sequence of supported face detection modes.
+            Each string MUST be one of the members of {{HumanFaceDetectionModeEnum}}.
+            See <a href="#def-constraint-humanFaceDetectionMode">
+            humanFaceDetectionMode</a> for additional details.</p>
           </dd>
-          <dt><dfn><code>humanFaceLandmarkDetectionMode</code></dfn> of type <span class="idlMemberType">sequence&lt;{{DOMString}}&gt;</span></dt>
+          <dt><dfn><code>humanFaceLandmarkDetectionMode</code></dfn> of type <code>sequence&lt;{{DOMString}}&gt;</code></dt>
           <dd>
-            <p>The sequence of supported <a>face landmark detection modes</a>.
-            Each string MUST be one of the members of {{HumanFaceLandmarkDetectionModeEnum}}.</p>
+            <p>The sequence of supported face landmark detection modes.
+            Each string MUST be one of the members of {{HumanFaceLandmarkDetectionModeEnum}}.
+            See <a href="#def-constraint-humanFaceLandmarkDetectionMode">
+            humanFaceLandmarkDetectionMode</a> for additional details.</p>
           </dd>
         </dl>
       </section>
     </section>
     <section>
-      <h3>{{MediaTrackConstraintSet}}</h3>
+      <h3>{{MediaTrackConstraintSet}} dictionary extensions</h3>
 <pre class="idl">
 partial dictionary MediaTrackConstraintSet {
   ConstrainDOMString humanFaceDetectionMode;
@@ -830,15 +833,15 @@ partial dictionary MediaTrackConstraintSet {
       <section class="notoc">
         <h4>Dictionary {{MediaTrackConstraintSet}} Members</h4>
         <dl class="dictionary-members" data-dfn-for="MediaTrackConstraintSet" data-link-for="MediaTrackConstraintSet">
-          <dt><dfn><code>humanFaceDetectionMode</code></dfn> of type <span class="idlMemberType">{{ConstrainDOMString}}</span></dt>
-          <dd>
-            <p>The string MUST be one of the members of {{HumanFaceDetectionModeEnum}}.
-            See <a>face detection mode</a> constrainable property.</p>
+          <dt><dfn>humanFaceDetectionMode</dfn> of type {{ConstrainDOMString}}</dt>
+          <dd>See <a href=
+            "#def-constraint-humanFaceDetectionMode">
+            humanFaceDetectionMode</a> for details.</dd>
           </dd>
-          <dt><dfn><code>humanFaceLandmarkDetectionMode</code></dfn> of type <span class="idlMemberType">{{ConstrainDOMString}}</span></dt>
-          <dd>
-            <p>The string MUST be one of the members of {{HumanFaceLandmarkDetectionModeEnum}}.
-            See <a>face landmark detection mode</a> constrainable property.</p>
+          <dt><dfn>humanFaceLandmarkDetectionMode</dfn> of type {{ConstrainDOMString}}</dt>
+          <dd>See <a href=
+            "#def-constraint-humanFaceLandmarkDetectionMode">
+            humanFaceLandmarkDetectionMode</a> for details.</dd>
           </dd>
         </dl>
       </section>
@@ -853,15 +856,15 @@ partial dictionary MediaTrackSettings {
       <section class="notoc">
         <h4>Dictionary {{MediaTrackSettings}} Members</h4>
         <dl class="dictionary-members" data-dfn-for="MediaTrackSettings" data-link-for="MediaTrackSettings">
-          <dt><dfn><code>humanFaceDetectionMode</code></dfn> of type <span class="idlMemberType">{{DOMString}}</span></dt>
-          <dd>
-            <p>Current <a>face detection mode</a> setting.
-            The string MUST be one of the members of {{HumanFaceDetectionModeEnum}}.</p>
+          <dt><dfn>humanFaceDetectionMode</dfn> of type {{DOMString}}</dt>
+          <dd>See <a href=
+            "#def-constraint-humanFaceDetectionMode">
+            humanFaceDetectionMode</a> for details.</dd>
           </dd>
-          <dt><dfn><code>humanFaceLandmarkDetectionMode</code></dfn> of type <span class="idlMemberType">{{DOMString}}</span></dt>
-          <dd>
-            <p>Current <a>face landmark detection mode</a> setting.
-            The string MUST be one of the members of {{HumanFaceLandmarkDetectionModeEnum}}.</p>
+          <dt><dfn>humanFaceLandmarkDetectionMode</dfn> of type {{ConstrainDOMString}}</dt>
+          <dd>See <a href=
+            "#def-constraint-humanFaceLandmarkDetectionMode">
+            humanFaceLandmarkDetectionMode</a> for details.</dd>
           </dd>
         </dl>
       </section>
@@ -878,13 +881,19 @@ enum HumanFaceDetectionModeEnum {
         <dl data-dfn-for="HumanFaceDetectionModeEnum" data-link-for="HumanFaceDetectionModeEnum">
           <dt><dfn><code>none</code></dfn></dt>
           <dd>
-            <p>This source does not offer object detection for human faces.
-            For setting, this is interpreted as a command to turn off
-            the setting of human face detection metadata.</p>
+            <p>This {{MediaStreamTrack}} source does not set metadata in
+            {{VideoFrameMetadata}} of {{VideoFrame}}s related to human faces,
+            that is, {{Segment}}s with the {{Segment/type}} {{SegmentType/"human-face"}}.
+            As an input, this is interpreted as a command to turn off the
+            setting of human face detection.</p>
           </dd>
           <dt><dfn><code>bounding-box</code></dfn></dt>
           <dd>
-            <p>This source offers detection of the bounding box of human faces or such a mode is requested.</p>
+            <p>This source sets metadata related to human faces
+            including bounding box information in the member {{Segment/boundingBox}}
+            of each {{Segment}} related to a detected face. As an input, this is
+            interpreted as a command to enable the setting of human face detection and
+            to find the bounding box of each detected face.</p>
           </dd>
         </dl>
       </section>
@@ -901,29 +910,68 @@ enum HumanFaceLandmarkDetectionModeEnum {
         <dl data-dfn-for="HumanFaceLandmarkDetectionModeEnum" data-link-for="HumanFaceLandmarkDetectionModeEnum">
           <dt><dfn><code>none</code></dfn></dt>
           <dd>
-            <p>This source does not offer object detection for human face landmarks.
-            For setting, this is interpreted as a command to turn off
-            the setting of human face landmark detection metadata.</p>
+            <p>This {{MediaStreamTrack}} source does not set metadata in
+            {{VideoFrameMetadata}} of {{VideoFrame}}s related to human face landmarks,
+            that is, {{Segment}}s with the {{Segment/type}} one of {{SegmentType/"left-eye"}}
+            {{SegmentType/"right-eye"}}, {{SegmentType/"eye"}}, or {{SegmentType/"mouth"}}.
+            As an input, this is interpreted as a command to turn off the
+            setting of human face landmark detection.</p>
           </dd>
           <dt><dfn><code>center-point</code></dfn></dt>
           <dd>
-            <p>This source offers detection of the center point of human face landmarks, or such a mode is requested.</p>
+            <p>This source sets metadata related to human face landmarks
+            including center point information in the member {{Segment/centerPoint}}
+            of each {{Segment}} related to a detected landmark. As an input, this is
+            interpreted as a command to enable the setting of human face landmark
+            detection and to find the center point of each detected landmark.</p>
           </dd>
         </dl>
       </section>
     </section>
     <section>
-      <h3>Constrainable Properties</h3>
-      <ol>
-        <li>
-          <p><dfn>Face detection mode</dfn> describes which face properties
-          are to be detected and set in the metadata for the video frame.</p>
-        </li>
-        <li>
-          <p><dfn>Face landmark detection mode</dfn> describes which face landmark
-          properties are to be detected and set in the metadata for the video frame.</p>
-        </li>
-      </ol>
+      <h2>Constrainable Properties</h2>
+      <p>The constrainable properties in this section are defined below.</p>
+      <table class="simple">
+        <thead>
+          <tr>
+            <th>Property Name</th>
+            <th>Values</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><dfn id="def-constraint-humanFaceDetectionMode">
+              humanFaceDetectionMode</dfn></td>
+            <td>{{ConstrainDOMString}}</td>
+            <td>
+              <p>This string (or each string, when a list) should be one of the
+              members of {{HumanFaceDetectionModeEnum}}.</p>
+              <p>As a {{MediaStreamTrack}} constraint, its value allows choosing
+              whether face detection is preferred or not and which geometrical
+              properties about the detected faces are useful to the application.</p>
+              <p>As a setting, this reflects which face geometrical
+              properties the user agent detects and sets in the metadata of the
+              {{VideoFrame}}s obtained from the track.</p>
+            </td>
+          </tr>
+          <tr>
+            <td><dfn id="def-constraint-humanFaceLandmarkDetectionMode">
+              humanFaceLandmarkDetectionMode</dfn></td>
+            <td>{{ConstrainDOMString}}</td>
+            <td>
+              <p>This string (or each string, when a list) should be one of the
+              members of {{HumanFaceLandmarkDetectionModeEnum}}.</p>
+              <p>As a {{MediaStreamTrack}} constraint, its value allows choosing
+              whether face landmark detection is preferred or not and which geometrical
+              properties about the detected landmarks are useful to the application.</p>
+              <p>As a setting, this reflects which face landmark geometrical
+              properties the user agent detects and sets in the metadata of the
+              {{VideoFrame}}s obtained from the track.</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </section>
     <section>
       <h3>Examples</h3>
@@ -934,6 +982,9 @@ const stream = await navigator.mediaDevices.getUserMedia({
   video: { humanFaceDetectionMode: 'bounding-box' }
 });
 const [videoTrack] = stream.getVideoTracks();
+if (videoTrack.getSettings().humanFaceDetectionMode != 'bounding-box') {
+  throw('Face bounding box detection is not supported');
+}
 
 // Use a video worker and show to user.
 const videoElement = document.querySelector('video');
@@ -950,7 +1001,9 @@ self.onmessage = async ({data: {track}}) => {
   const transformer = new TransformStream({
     async transform(frame, controller) {
       for (const segment of frame.metadata().segment || []) {
-        if (segment.type === 'human-face' && segment.boundingBox) {
+        if (segment.type === 'human-face') {
+          // the metadata is coming directly from the video track with
+          // bounding-box face detection enabled
           console.log(
             `Face @ (${segment.boundingBox.left}, ${segment.boundingBox.top}), ` +
                    `(${segment.boundingBox.right}, ${segment.boundingBox.bottom})`);
